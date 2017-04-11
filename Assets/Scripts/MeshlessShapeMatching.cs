@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using System.Linq;
 using MathNet.Numerics;
 using MathNet.Numerics.LinearAlgebra;
@@ -20,24 +21,35 @@ public class MeshlessShapeMatching : MonoBehaviour, IDeformer
     Vector3[] f;
     Vector<float> x_0_cm;
     Matrix<float> A_qq;
-    [Range(0, 1)] public float alpha = 1;
-    [Range(0,1)]public float velocityDamp = 1;
+    [Range(0.01f, 1)] public float alpha = 1;
+    [Range(0.01f,1)]public float velocityDamp = 1;
 
     public Vector3 defaultForce;
+    public LayerMask collidesWith;
+    MeshCollider meshCollider;
+
     // Use this for initialization
     void Start()
     {
         var meshFilter = GetComponent<MeshFilter>();
-        var meshCollider = GetComponent<MeshCollider>();
+        meshCollider = GetComponent<MeshCollider>();
         partSys = GetComponent<ParticleSystem>();
         var main = partSys.main;
         main.simulationSpace = ParticleSystemSimulationSpace.World;
         
         startingMesh = meshFilter.mesh;
         currentMesh = Instantiate(startingMesh);
+        
+        //remove scaling from mesh;
+        currentMesh.vertices = startingMesh.vertices.Select(v => v.PointwiseMult(transform.localScale)).ToArray();
+        //remove children to keep from being affected by rescaling, then re-add
+        var children = Enumerable.Range(0, transform.childCount).Select(i => transform.GetChild(i)).ToArray();
+        transform.DetachChildren();
+        transform.localScale = Vector3.one;
+        foreach (var child in children) child.parent = transform;
+
         meshFilter.mesh = currentMesh;
         meshCollider.sharedMesh = currentMesh;
-
         particles = currentMesh.vertices.Select(
             v => new ParticleSystem.Particle
             {
@@ -52,12 +64,12 @@ public class MeshlessShapeMatching : MonoBehaviour, IDeformer
         x_0 = particles.Select(part => part.position.ToNumerics()).ToArray();
         x = particles.Select(part => part.position.ToNumerics()).ToArray();
         m = Enumerable.Repeat(1f, currentMesh.vertexCount).ToArray();
-        f = Enumerable.Repeat(defaultForce, currentMesh.vertexCount).ToArray();
+        f = Enumerable.Repeat(defaultForce, particles.Length).ToArray();
         x_0_cm = x_0.Mean(m);
         q = x_0.Select(x0_i=>x0_i - x_0_cm).ToArray();
         A_qq = q.Zip(m, (q_i, m_i) => m_i * q_i.ToColumnMatrix() * q_i.ToRowMatrix()).Aggregate((sum,mat)=>sum+mat).Inverse();
 
-
+        
     }
 
     void Update()
@@ -89,19 +101,28 @@ public class MeshlessShapeMatching : MonoBehaviour, IDeformer
         var h = Time.fixedDeltaTime;
         for (int i = 0; i < particles.Length; i++)
         {
-            var start = particles[i].velocity;
+            var start = particles[i].velocity * velocityDamp;
             var middle = alpha * ((g[i] - particles[i].position) / h);
             var end = h * f[i] / m[i];
             f[i] = defaultForce;
 
             particles[i].velocity = start + middle + end;
+            RaycastHit hitInfo;
+            bool didhit = Physics.Raycast(new Ray(particles[i].position - particles[i].velocity*h, particles[i].velocity.normalized),
+                out hitInfo, particles[i].velocity.magnitude*h*2, collidesWith );
 
-            particles[i].position += particles[i].velocity * h;
-            particles[i].velocity *= velocityDamp;
+            particles[i].position = didhit? hitInfo.point : particles[i].position + particles[i].velocity * h;
+            particles[i].velocity = didhit? Vector3.zero : particles[i].velocity;
         }
-        
+
+        //update unity pivot
+        transform.position = x_cm.ToUnity();
+        var targetQuat = R.ToUnity().ExtractRotation();
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetQuat, alpha);
+
         currentMesh.SetVertices(particles.Select(p => transform.InverseTransformPoint(p.position)).ToList());
         currentMesh.RecalculateNormals();
+        meshCollider.sharedMesh = currentMesh;
     }
 
 
@@ -114,6 +135,7 @@ public class MeshlessShapeMatching : MonoBehaviour, IDeformer
     {
         particles[index].position = position;
         if (resetVelocity) particles[index].velocity = Vector3.zero;
+ 
     }
 
     public void SetWorldVertexVelocity(int index, Vector3 velocity)

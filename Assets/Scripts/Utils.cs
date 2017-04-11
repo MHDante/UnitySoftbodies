@@ -36,7 +36,43 @@ using UnityEngine;
         }
         public static Vector3 ToUnity(this Vector<float> v)
         {
-            return new Vector3(v[0], v[1], v[2] );
+            return new Vector3(v[0], v[1], v[2]);
+        }
+        public static Matrix4x4 ToUnity(this Matrix<float> M)
+        {
+            var ret = new Matrix4x4();
+            var limit = M.ColumnCount;
+            if(limit!= M.RowCount || (limit !=3 && limit !=4) )throw new ArgumentException("Bad Matrix Dimensions");
+            for (int i = 0; i < limit; i++)
+            {
+                for (int j = 0; j < limit; j++)
+                {
+                    ret[i, j] = M[i, j];
+                }
+            }
+            return ret;
+        }
+
+        public static Vector3 ExtractPosition(this Matrix4x4 m)
+        {
+            return m.GetColumn(3);
+        }
+
+        public static Quaternion ExtractRotation(this Matrix4x4 m)
+        {
+            return Quaternion.LookRotation(
+                m.GetColumn(2),
+                m.GetColumn(1)
+            );
+        }
+
+        public static Vector3 ExtractScale(this Matrix4x4 m)
+        {
+            return new Vector3(
+                m.GetColumn(0).magnitude,
+                m.GetColumn(1).magnitude,
+                m.GetColumn(2).magnitude
+            );
         }
 
         public static void SetValue(this Vector<float> to, Vector3 from)
@@ -62,5 +98,10 @@ using UnityEngine;
         
             return (E * D * E.Transpose()).Transpose();
         
+        }
+
+        public static Vector3 PointwiseMult(this Vector3 a, Vector3 b)
+        {
+            return new Vector3(a.x*b.x,a.y*b.y,a.z*b.z);
         }
 }

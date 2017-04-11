@@ -8,9 +8,8 @@ public class Manipulator : MonoBehaviour {
     GameObject IndicatorObj;
 
     List<int> SelectedIndices = new List<int>();
-
+    List<Vector3> offsets=new List<Vector3>();
     Plane transformPlane;
-    Vector3 prevOffset;
 
     public float selectRadius = .2f;
     public IDeformer deformer;
@@ -20,6 +19,7 @@ public class Manipulator : MonoBehaviour {
         
         IndicatorObj = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
         IndicatorObj.GetComponent<MeshRenderer>().material.color = Color.red;
+        Destroy(IndicatorObj.GetComponent<Collider>());
         deformer = GetComponent<IDeformer>();
 
     }
@@ -54,17 +54,14 @@ public class Manipulator : MonoBehaviour {
         float dist;
 
         transformPlane.Raycast(mouseRay, out dist);
-        var offset = Camera.main.transform.position + dist * mouseRay.direction - prevOffset;
-        foreach (int selectedIndex in SelectedIndices)
+        var offset = Camera.main.transform.position + dist * mouseRay.direction ;
+        for (var i = 0; i < SelectedIndices.Count; i++)
         {
-            var targetPosition = worldVerts[selectedIndex] + offset;
+            int selectedIndex = SelectedIndices[i];
+            var targetPosition = offsets[i] + offset;
             deformer.SetWorldVertexPosition(selectedIndex, targetPosition);
         }
-
-         
-        prevOffset = prevOffset + offset;
-
-        IndicatorObj.transform.position = prevOffset;
+        IndicatorObj.transform.position = offset;
     }
 
     void InitPick()
@@ -74,7 +71,6 @@ public class Manipulator : MonoBehaviour {
         var mouseRay = Camera.main.ScreenPointToRay(Input.mousePosition);
         float dist;
         transformPlane.Raycast(mouseRay, out dist);
-        prevOffset = Camera.main.transform.position + mouseRay.direction * dist;
         IndicatorObj.GetComponent<MeshRenderer>().material.color = Color.yellow;
     }
 
@@ -100,6 +96,7 @@ public class Manipulator : MonoBehaviour {
         {
             IndicatorObj.transform.position = sum/ SelectedIndices.Count;
             IndicatorObj.SetActive(true);
+            offsets = SelectedIndices.Select(i => vertices[i] - IndicatorObj.transform.position).ToList();
         }
         else
         {
