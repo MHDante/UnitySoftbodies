@@ -66,7 +66,6 @@ public class Manipulator : MonoBehaviour {
 
     void InitPick()
     {
-
         transformPlane = new Plane(Camera.main.transform.forward, IndicatorObj.transform.position);
         var mouseRay = Camera.main.ScreenPointToRay(Input.mousePosition);
         float dist;

@@ -22,10 +22,14 @@ public class MeshlessShapeMatching : MonoBehaviour, IDeformer
     Vector<float> x_0_cm;
     Matrix<float> A_qq;
     [Range(0.01f, 1)] public float alpha = 1;
+    [Range(0f, 0.49f)] public float beta = 1;
     [Range(0.01f,1)]public float velocityDamp = 1;
+    [Range(0.01f,1)]public float bounceVelDamp = 1;
 
+    readonly Dictionary<int,Vector3> targets = new Dictionary<int, Vector3>();
     public Vector3 defaultForce;
     public LayerMask collidesWith;
+    public float pullForce = 1;
     MeshCollider meshCollider;
 
     // Use this for initialization
@@ -95,18 +99,36 @@ public class MeshlessShapeMatching : MonoBehaviour, IDeformer
 
         var S = (A_pq.Transpose() * A_pq).Sqrt();
         var R = A_pq * S.Inverse();
+        var A = A_pq * A_qq;
+        var detA = A.Determinant();
+        A /= Mathf.Pow(detA, 1 / 3f);
+        print(A.Determinant() +" : "+detA);
+        var T = beta * A + (1 - beta) * R;
 
-        var g = q.Select(q_i => (R * q_i) + x_cm).Select(v=>v.ToUnity()).ToArray();
+
+
+        var g = q.Select(q_i => (T * q_i) + x_cm).Select(v=>v.ToUnity()).ToArray();
 
         var h = Time.fixedDeltaTime;
+
+        foreach (var i in targets.Keys.ToList())
+        {
+            f[i] += pullForce * (targets[i]-g[i])/h;
+            targets.Remove(i);
+        }
+
+
         for (int i = 0; i < particles.Length; i++)
         {
-            var start = particles[i].velocity * velocityDamp;
+            var start = particles[i].velocity;
             var middle = alpha * ((g[i] - particles[i].position) / h);
             var end = h * f[i] / m[i];
             f[i] = defaultForce;
-
+            
             particles[i].velocity = start + middle + end;
+            if (Vector3.Dot(particles[i].velocity, start) < 0) particles[i].velocity *= bounceVelDamp;
+            particles[i].velocity *= velocityDamp;
+
             RaycastHit hitInfo;
             bool didhit = Physics.Raycast(new Ray(particles[i].position - particles[i].velocity*h, particles[i].velocity.normalized),
                 out hitInfo, particles[i].velocity.magnitude*h*2, collidesWith );
@@ -131,9 +153,10 @@ public class MeshlessShapeMatching : MonoBehaviour, IDeformer
         get { return particles.Select(p => p.position).ToArray(); }
     }
 
-    public void SetWorldVertexPosition(int index, Vector3 position, bool resetVelocity = true)
+    public void SetWorldVertexPosition(int index, Vector3 position, bool resetVelocity = false)
     {
-        particles[index].position = position;
+        //particles[index].position = position;
+        targets.Add(index,position);
         if (resetVelocity) particles[index].velocity = Vector3.zero;
  
     }
