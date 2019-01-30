@@ -6,18 +6,35 @@ using UnityEngine;
 public class MsdEcs : MonoBehaviour
 {
 
+    [Range(0.1f, 10)]
     public float ClusterSize = 1;
+
+    public bool lines;
     public List<Cluster> clusters = new List<Cluster>();
+    private Vector3[] verts;
+    private MeshFilter meshFilter;
+
     public void Awake()
     {
 
-        var collider = GetComponent<MeshCollider>();
-        var min = collider.sharedMesh.bounds.min;
-        var max = collider.sharedMesh.bounds.max;
+        var meshCollider = GetComponent<MeshCollider>();
+        var min = meshCollider.sharedMesh.bounds.min;
+        var max = meshCollider.sharedMesh.bounds.max;
         var halfC = ClusterSize / 2;
         var parent = new GameObject("Clusters");
         parent.transform.SetParent(this.transform, false);
-        var verts = collider.sharedMesh.vertices;
+        verts = meshCollider.sharedMesh.vertices;
+        var zero = transform.InverseTransformPoint(Vector3.zero);
+        var right = transform.InverseTransformPoint(Vector3.right);
+        var up = transform.InverseTransformPoint(Vector3.up);
+        var forward = transform.InverseTransformPoint(Vector3.forward);
+
+        var worldExtents = new Vector3(
+            Vector3.Distance(zero, right),
+            Vector3.Distance(zero, up),
+            Vector3.Distance(zero, forward)
+        );
+        var halfextents = worldExtents * .5f * ClusterSize;
 
         for (float x = min.x + halfC; x < max.x + halfC; x += ClusterSize)
         {
@@ -25,39 +42,77 @@ public class MsdEcs : MonoBehaviour
             {
                 for (float z = min.z + halfC; z < max.z + halfC; z += ClusterSize)
                 {
-                    var indexes = CubeContains(new Vector3(x, y, z), ClusterSize, verts);
-                    if (indexes.Length <= 0) continue;
-
                     var center = new Vector3(x, y, z);
-                    var o = new GameObject("Cluster");
-                    o.AddComponent<BoxCollider>();
-                    o.transform.SetParent(parent.transform, false);
-                    o.transform.localPosition = center;
-                    o.transform.localScale = Vector3.one * ClusterSize;
-                    var cluster = o.AddComponent<Cluster>();
-                    cluster.VertIndexes = indexes;
+                    var cols = Physics.OverlapBox(center.ToWorld(transform), halfextents, transform.rotation);
+                    if (!cols.Contains(meshCollider)) continue;
+
+                    var cluster = new GameObject("Cluster").AddComponent<Cluster>();
+                    cluster.Sphere = cluster.gameObject.AddComponent<SphereCollider>();
+                    cluster.RigidBody = cluster.gameObject.AddComponent<Rigidbody>();
+                    cluster.transform.SetParent(parent.transform, false);
+                    cluster.transform.localPosition = center;
+                    cluster.transform.localScale = Vector3.one * ClusterSize;
+                    CubeContains(new Vector3(x, y, z), ClusterSize, verts, cluster);
+
+                    foreach (var c2 in clusters)
+                    {
+                        Physics.IgnoreCollision(cluster.Sphere, c2.Sphere, true);
+                    }
                     clusters.Add(cluster);
                 }
             }
         }
+
+        Destroy(meshCollider);
+        Destroy(GetComponent<Rigidbody>());
+
+        meshFilter = GetComponent<MeshFilter>();
+        verts = meshFilter.mesh.vertices;
     }
 
-    private static int[] CubeContains(Vector3 center, float sideLength, Vector3[] point)
+    public void FixedUpdate()
+    {
+        foreach (var cluster in clusters)
+        {
+            for (var i = 0; i < cluster.Offsets.Length; i++)
+            {
+                var index = cluster.VertIndexes[i];
+                var offset = cluster.Offsets[i];
+
+                verts[index] = cluster.transform.localPosition + offset;
+            }
+        }
+        
+        meshFilter.mesh.vertices = verts;
+    }
+
+    private static void CubeContains(Vector3 center, float sideLength, Vector3[] point, Cluster c)
     {
         var halfv = new Vector3(sideLength, sideLength, sideLength) * .5f;
         var min = center - halfv;
         var max = center + halfv;
         List<int> indexes = new List<int>();
+        List<Vector3> offsets = new List<Vector3>();
         for (int i = 0; i < point.Length; i++)
         {
 
-            if (point[i].GreaterThanEq(min) && point[i].LessThanEq(max)) indexes.Add(i);
+            if (point[i].GreaterThanEq(min) && point[i].LessThanEq(max))
+            {
+                indexes.Add(i);
+                offsets.Add(point[i] - center);
+            }
+
         }
-        return indexes.ToArray();
+
+        c.Offsets = offsets.ToArray();
+        c.VertIndexes = indexes.ToArray();
     }
+
 
     public void OnDrawGizmosSelected()
     {
+        if (!lines) return;
+
         var collider = GetComponent<MeshCollider>();
         var min = collider.sharedMesh.bounds.min;
         var oldMax = collider.sharedMesh.bounds.max;
@@ -100,4 +155,7 @@ public static class VectorExtensions
 public class Cluster : MonoBehaviour
 {
     public int[] VertIndexes;
+    public SphereCollider Sphere;
+    public Rigidbody RigidBody;
+    public Vector3[] Offsets;
 }
