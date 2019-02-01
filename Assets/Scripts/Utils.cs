@@ -5,6 +5,7 @@ using System.Text;
 using MathNet.Numerics;
 using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.LinearAlgebra.Single;
+using Unity.Mathematics;
 using UnityEngine;
     static class Utils
     {
@@ -80,6 +81,44 @@ using UnityEngine;
             to[0] = from[0];
             to[1] = from[1];
             to[2] = from[2];
+        }
+
+        public static float3x3 Sqrt(this in float3x3 a)
+        {
+            return Sqrt(a.ToNumerics()).ToUnityMath();
+        }
+
+        public static float3x3 ToUnityMath(this Matrix<float> M)
+        {
+            var limit = M.ColumnCount;
+            if(limit!= M.RowCount || (limit !=3) )throw new ArgumentException("Bad Matrix Dimensions");
+            return new float3x3(
+                M[0,0],
+                M[0,1],
+                M[0,2],
+                M[1,0],
+                M[1,1],
+                M[1,2],
+                M[2,0],
+                M[2,1],
+                M[2,2]
+            );
+        }
+
+        public static Matrix<float> ToNumerics(this in float3x3 a)
+        {
+            
+            Matrix<float> holder = Matrix<float>.Build.Dense(3, 3, 0);
+            holder[0, 0] = a.c0[0];
+            holder[1, 0] = a.c0[1];
+            holder[2, 0] = a.c0[2];
+            holder[0, 1] = a.c1[0];
+            holder[1, 1] = a.c1[1];
+            holder[2, 1] = a.c1[2];
+            holder[0, 2] = a.c2[0];
+            holder[1, 2] = a.c2[1];
+            holder[2, 2] = a.c2[2];
+            return holder;
         }
 
         public static Matrix<float> Sqrt(this Matrix<float> A)
