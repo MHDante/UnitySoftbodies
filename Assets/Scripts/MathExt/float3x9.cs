@@ -1,6 +1,7 @@
 // GENERATED CODE
 using System;
 using System.Runtime.CompilerServices;
+using Mathematics.Extensions;
 
 #pragma warning disable 0660, 0661
 
@@ -114,7 +115,23 @@ namespace Unity.Mathematics
             this.c8 = (float3)v;
         }
         
-
+        
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override int GetHashCode()
+        {
+            return new float9(
+                math.asfloat(math.hash(c0)),
+                math.asfloat(math.hash(c1)),
+                math.asfloat(math.hash(c2)),
+                math.asfloat(math.hash(c3)),
+                math.asfloat(math.hash(c4)),
+                math.asfloat(math.hash(c5)),
+                math.asfloat(math.hash(c6)),
+                math.asfloat(math.hash(c7)),
+                math.asfloat(math.hash(c8))
+            ).GetHashCode();
+        }
 
         /// <summary>Implicitly converts a single float value to a float3x9 matrix by assigning it to every component.</summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

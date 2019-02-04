@@ -13,7 +13,8 @@ public class MsdEcs : MonoBehaviour
 
     [Range(0, 1)]
     public float Beta = 1;
-    [SerializeField] private float Drag;
+
+    public float Drag;
 
     private Vector3[] vertices;
     private float3[] q;
@@ -185,7 +186,7 @@ public class MsdEcs : MonoBehaviour
         }
     }
 
-    
+
     public void PerserveVolume(ref float3x3 a)
     {
         var det = math.determinant(a);

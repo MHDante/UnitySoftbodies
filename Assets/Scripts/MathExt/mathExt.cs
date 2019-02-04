@@ -118,9 +118,7 @@ namespace Mathematics.Extensions
 
                     aT[row] -= aT[column] / scale;
                     augmented[row] -= augmented[column] / scale;
-
                 }
-
             }
 
             return augmented.transpose();
