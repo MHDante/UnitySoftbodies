@@ -1,15 +1,17 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 using Unity.Mathematics;
+using Mathematics.Extensions;
 
 public class MsdEcs : MonoBehaviour
 {
-    [Range(0,1)]
+    [Range(0, 1)]
     public float Alpha = 1;
-    
-    [Range(0,1)]
+
+    [Range(0, 1)]
     public float Beta = 1;
     [SerializeField] private float Drag;
 
@@ -35,12 +37,12 @@ public class MsdEcs : MonoBehaviour
         var colliders = new List<Collider>();
 
         var parent = new GameObject("Vertices").transform;
-        parent.SetParent(transform,false);
+        parent.SetParent(transform, false);
 
         for (var i = 0; i < vertices.Length; i++)
         {
             var o = GameObject.CreatePrimitive(PrimitiveType.Sphere);// new GameObject("Vertex " + i);
-            o.transform.SetParent(parent,false);
+            o.transform.SetParent(parent, false);
             o.transform.localPosition = vertices[i];
             var c = o.GetComponent<SphereCollider>();
             foreach (var cc in colliders)
@@ -59,19 +61,19 @@ public class MsdEcs : MonoBehaviour
             rb.constraints = RigidbodyConstraints.FreezeRotation;
             bodies[i] = rb;
         }
-        
+
         x = new float3[bodies.Length];
         m = new float[bodies.Length];
-        GetPositionsAndMasses(bodies,x,m,false);
-        x0Cm = CenterOfMass(x,m);
-        
+        GetPositionsAndMasses(bodies, x, m, false);
+        x0Cm = CenterOfMass(x, m);
+
         q = x.Select(x0i => x0i - x0Cm).ToArray();
 
-        
+
         Aqq = float3x3.zero;
         for (int i = 0; i < x.Length; i++)
         {
-            var mat = q[i].MulTranspose(q[i]);
+            var mat = q[i].mulT(q[i]);
             Aqq += bodies[i].mass * mat;
         }
 
@@ -80,46 +82,47 @@ public class MsdEcs : MonoBehaviour
 
     public void FixedUpdate()
     {
-        
-        GetPositionsAndMasses(bodies,x,m,true);
-        var xcm = CenterOfMass(x,m);
-        
+
+        GetPositionsAndMasses(bodies, x, m, true);
+        var xcm = CenterOfMass(x, m);
+
         float3x3 Apq = float3x3.zero;
         for (int i = 0; i < x.Length; i++)
         {
             var pi = x[i] - xcm;
-            var mat = pi.MulTranspose(q[i]);
+            var mat = pi.mulT(q[i]);
             Apq += bodies[i].mass * mat;
         }
-        
+
         ExtractRotation(ref Apq, ref rq);
 
-        var A = math.mul(Apq , Aqq);
-        A.PerserveVolume();
+        var A = math.mul(Apq, Aqq);
+        PerserveVolume(ref A);
         var R = new float3x3(rq);
         var T = Beta * A + (1 - Beta) * R;
         DrawPt(xcm);
         for (int i = 0; i < x.Length; i++)
         {
-            var rot1 = math.mul(T,  q[i]);
+            var rot1 = math.mul(T, q[i]);
             // var rot2 = math.mul(T,  q[i]);
             var gi = rot1 + xcm;
             var diff = gi - x[i];
             DrawPt(x[i], Color.red);
             DrawPt(gi, Color.green);
-            
-            
-            var accel = (Alpha/Time.fixedDeltaTime) * diff;
+
+
+            var accel = (Alpha / Time.fixedDeltaTime) * diff;
             bodies[i].AddForce(accel, ForceMode.VelocityChange);
         }
     }
 
     void DrawPt(Vector3 gi, Color? color = null)
-    {;
+    {
+        ;
         var c = color ?? Color.white;
-        Debug.DrawLine(gi,gi+new Vector3(0,0,.1f),c);
-        Debug.DrawLine(gi,gi+new Vector3(0,.1f,0),c);
-        Debug.DrawLine(gi,gi+new Vector3(.1f,0,0),c);
+        Debug.DrawLine(gi, gi + new Vector3(0, 0, .1f), c);
+        Debug.DrawLine(gi, gi + new Vector3(0, .1f, 0), c);
+        Debug.DrawLine(gi, gi + new Vector3(.1f, 0, 0), c);
 
     }
     private void Update()
@@ -137,7 +140,7 @@ public class MsdEcs : MonoBehaviour
     {
         for (int i = 0; i < rs.Length; i++)
         {
-            ps[i] = includeVelocity? rs[i].position + rs[i].velocity*Time.fixedDeltaTime : rs[i].position;
+            ps[i] = includeVelocity ? rs[i].position + rs[i].velocity * Time.fixedDeltaTime : rs[i].position;
             ms[i] = rs[i].mass;
         }
     }
@@ -169,7 +172,7 @@ public class MsdEcs : MonoBehaviour
     void ExtractRotation(ref float3x3 a, ref quaternion r, int maxIterations = 9)
     {
 
-        
+
         for (var i = 0; i < maxIterations; i++)
         {
             var rmat = new float3x3(r);
@@ -183,35 +186,17 @@ public class MsdEcs : MonoBehaviour
     }
 
     
-
-}
-
-
-public static class VectorExtensions
-{
-    public static Vector3 ToWorld(this Vector3 localPt, Transform t) => t.TransformPoint(localPt);
-    public static bool LessThanEq(this Vector3 a, Vector3 b) => a.x <= b.x && a.y <= b.y && a.z <= b.z;
-    public static bool GreaterThanEq(this Vector3 a, Vector3 b) => a.x >= b.x && a.y >= b.y && a.z >= b.z;
-    
-    public static void ToMatrix(this quaternion q, ref float3x3 m) {
-        m[0] = math.mul(q , new float3(1,0,0));
-        m[1] = math.mul(q , new float3(0,1,0));
-        m[2] = math.mul(q , new float3(0,0,1));
-    }
-
-    /// <summary>Returns the float3x3 matrix result of a matrix multiplication between a float3x2 matrix and a float2x3 matrix.</summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static float3x3 MulTranspose(this float3 a, float3 b) => 
-        math.float3x3(a * b.x, a * b.y, a * b.z);
-
-
-    public static void PerserveVolume(this ref float3x3 m)
+    public void PerserveVolume(ref float3x3 a)
     {
-        var det = math.determinant(m);
-        var cbrtDet = math.pow(math.abs(det), 1/3.0);
-        var div = ( det < 0 ) ? -cbrtDet : cbrtDet;
-        m = m / (float)div;
+        var det = math.determinant(a);
+        var cbrtDet = math.pow(math.abs(det), 1 / 3.0);
+        var div = (det < 0) ? -cbrtDet : cbrtDet;
+        a = a / (float)div;
     }
 
+
 }
+
+
+
 
