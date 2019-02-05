@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using UnityEngine;
 using Unity.Mathematics;
 using Mathematics.Extensions;
@@ -17,6 +15,7 @@ public class MsdEcs : MonoBehaviour
     public float Drag;
 
     private Vector3[] vertices;
+    private float9[] q_tilde;
     private float3[] q;
     private float3[] x;
     private float[] m;
@@ -24,8 +23,9 @@ public class MsdEcs : MonoBehaviour
     private Rigidbody[] bodies;
     private float3 x0Cm;
     private quaternion rq = quaternion.identity;
-    private float3x3 Aqq_inv;
     private float3x3 Aqq;
+    private float9x9 Aqq_tilde;
+    private Transform parent;
 
     public void Awake()
     {
@@ -37,12 +37,13 @@ public class MsdEcs : MonoBehaviour
         bodies = new Rigidbody[vertices.Length];
         var colliders = new List<Collider>();
 
-        var parent = new GameObject("Vertices").transform;
+        parent = new GameObject("Particles").transform;
         parent.SetParent(transform, false);
 
         for (var i = 0; i < vertices.Length; i++)
         {
             var o = GameObject.CreatePrimitive(PrimitiveType.Sphere);// new GameObject("Vertex " + i);
+            o.name = $"Particle {i}";
             o.transform.SetParent(parent, false);
             o.transform.localPosition = vertices[i];
             var c = o.GetComponent<SphereCollider>();
@@ -69,16 +70,23 @@ public class MsdEcs : MonoBehaviour
         x0Cm = CenterOfMass(x, m);
 
         q = x.Select(x0i => x0i - x0Cm).ToArray();
-
+        q_tilde = q.Select(qi => new float9(
+            qi.x, qi.y, qi.z,
+            qi.x * qi.x, qi.y * qi.y, qi.z * qi.z,
+            qi.x * qi.y, qi.y * qi.z, qi.z * qi.x)
+        ).ToArray();
 
         Aqq = float3x3.zero;
+        Aqq_tilde = float9x9.zero;
         for (int i = 0; i < x.Length; i++)
         {
-            var mat = q[i].mulT(q[i]);
-            Aqq += bodies[i].mass * mat;
+            var mass = bodies[i].mass;
+            Aqq += mass * mathExt.mulT(q[i], q[i]);
+            Aqq_tilde += mass * mathExt.mulT(q_tilde[i], q_tilde[i]);
         }
 
         Aqq = math.inverse(Aqq);
+        Aqq_tilde = mathExt.inverse(Aqq_tilde);
     }
 
     public void FixedUpdate()
@@ -88,31 +96,45 @@ public class MsdEcs : MonoBehaviour
         var xcm = CenterOfMass(x, m);
 
         float3x3 Apq = float3x3.zero;
+        float3x9 Apq_tilde = float3x9.zero;
+
         for (int i = 0; i < x.Length; i++)
         {
+            var mass = bodies[i].mass;
             var pi = x[i] - xcm;
-            var mat = pi.mulT(q[i]);
-            Apq += bodies[i].mass * mat;
+            Apq += mass * mathExt.mulT(pi, q[i]);
+            Apq_tilde += mass * mathExt.mulT(pi, q_tilde[i]);
         }
 
         ExtractRotation(ref Apq, ref rq);
 
+        var R = new float3x3(rq);
+        
+        var R_tilde = float3x9.zero;
+        R_tilde.c0 = R.c0;
+        R_tilde.c1 = R.c1;
+        R_tilde.c2 = R.c2;
+
         var A = math.mul(Apq, Aqq);
         PerserveVolume(ref A);
-        var R = new float3x3(rq);
+
+        var A_tilde = mathExt.mul(Apq_tilde, Aqq_tilde);
+
         var T = Beta * A + (1 - Beta) * R;
+        var T_tilde = Beta * A_tilde + (1 - Beta) * R_tilde;
+
         DrawPt(xcm);
         for (int i = 0; i < x.Length; i++)
         {
             var rot1 = math.mul(T, q[i]);
-            // var rot2 = math.mul(T,  q[i]);
-            var gi = rot1 + xcm;
+            var rot2 = mathExt.mul(T_tilde,  q_tilde[i]);
+            var gi = rot2 + xcm;
             var diff = gi - x[i];
             DrawPt(x[i], Color.red);
             DrawPt(gi, Color.green);
 
 
-            var accel = (Alpha / Time.fixedDeltaTime) * diff;
+            var accel = Alpha / Time.fixedDeltaTime * diff;
             bodies[i].AddForce(accel, ForceMode.VelocityChange);
         }
     }
@@ -133,6 +155,7 @@ public class MsdEcs : MonoBehaviour
             vertices[i] = this.transform.InverseTransformPoint(bodies[i].position);
         }
         meshFilter.mesh.vertices = vertices;
+        meshFilter.mesh.RecalculateNormals();
     }
 
 
@@ -152,7 +175,7 @@ public class MsdEcs : MonoBehaviour
         float m = 0;
         for (var i = 0; i < ps.Length; i++)
         {
-            r += (ps[i]) * ms[i];
+            r += ps[i] * ms[i];
             m += ms[i];
         }
         return r / m;
@@ -172,8 +195,6 @@ public class MsdEcs : MonoBehaviour
     // From: https://animation.rwth-aachen.de/media/papers/2016-MIG-StableRotation.pdf
     void ExtractRotation(ref float3x3 a, ref quaternion r, int maxIterations = 9)
     {
-
-
         for (var i = 0; i < maxIterations; i++)
         {
             var rmat = new float3x3(r);
@@ -191,7 +212,7 @@ public class MsdEcs : MonoBehaviour
     {
         var det = math.determinant(a);
         var cbrtDet = math.pow(math.abs(det), 1 / 3.0);
-        var div = (det < 0) ? -cbrtDet : cbrtDet;
+        var div = det < 0 ? -cbrtDet : cbrtDet;
         a = a / (float)div;
     }
 

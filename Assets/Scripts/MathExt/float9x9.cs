@@ -228,7 +228,7 @@ namespace Mathematics.Extensions
         
 
         /// <summary>Returns the float9 element at a specified index.</summary>
-        unsafe public float9 this[int index]
+        unsafe public ref float9 this[int index]
         {
             get
             {
@@ -236,15 +236,7 @@ namespace Mathematics.Extensions
                 if ((uint)index >= 9)
                     throw new System.ArgumentException("index must be between[0...8]");
 #endif
-                fixed (float9x9* array = &this) { return ((float9*)array)[index]; }
-            }
-            set
-            {
-#if ENABLE_UNITY_COLLECTIONS_CHECKS
-                if ((uint)index >= 9)
-                    throw new System.ArgumentException("index must be between[0...8]");
-#endif
-                fixed (float9* array = &c0) { array[index] = value; }
+                fixed (float9x9* array = &this) { return  ref ((float9*)array)[index]; }
             }
         }
 
@@ -260,7 +252,7 @@ namespace Mathematics.Extensions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override string ToString()
         {
-            return string.Format("float9x9({0}f, {1}f, {2}f, {3}f, {4}f, {5}f, {6}f, {7}f, {8}f,  {9}f, {10}f, {11}f, {12}f, {13}f, {14}f, {15}f, {16}f, {17}f,  {18}f, {19}f, {20}f, {21}f, {22}f, {23}f, {24}f, {25}f, {26}f,  {27}f, {28}f, {29}f, {30}f, {31}f, {32}f, {33}f, {34}f, {35}f,  {36}f, {37}f, {38}f, {39}f, {40}f, {41}f, {42}f, {43}f, {44}f,  {45}f, {46}f, {47}f, {48}f, {49}f, {50}f, {51}f, {52}f, {53}f,  {54}f, {55}f, {56}f, {57}f, {58}f, {59}f, {60}f, {61}f, {62}f,  {63}f, {64}f, {65}f, {66}f, {67}f, {68}f, {69}f, {70}f, {71}f,  {72}f, {73}f, {74}f, {75}f, {76}f, {77}f, {78}f, {79}f, {80}f)", c0.r0, c1.r0, c2.r0, c3.r0, c4.r0, c5.r0, c6.r0, c7.r0, c8.r0, c0.r1, c1.r1, c2.r1, c3.r1, c4.r1, c5.r1, c6.r1, c7.r1, c8.r1, c0.r2, c1.r2, c2.r2, c3.r2, c4.r2, c5.r2, c6.r2, c7.r2, c8.r2, c0.r3, c1.r3, c2.r3, c3.r3, c4.r3, c5.r3, c6.r3, c7.r3, c8.r3, c0.r4, c1.r4, c2.r4, c3.r4, c4.r4, c5.r4, c6.r4, c7.r4, c8.r4, c0.r5, c1.r5, c2.r5, c3.r5, c4.r5, c5.r5, c6.r5, c7.r5, c8.r5, c0.r6, c1.r6, c2.r6, c3.r6, c4.r6, c5.r6, c6.r6, c7.r6, c8.r6, c0.r7, c1.r7, c2.r7, c3.r7, c4.r7, c5.r7, c6.r7, c7.r7, c8.r7, c0.r8, c1.r8, c2.r8, c3.r8, c4.r8, c5.r8, c6.r8, c7.r8, c8.r8);
+            return string.Format("float9x9(\n{0}f, {1}f, {2}f, {3}f, {4}f, {5}f, {6}f, {7}f, {8}f,\n{9}f, {10}f, {11}f, {12}f, {13}f, {14}f, {15}f, {16}f, {17}f,\n{18}f, {19}f, {20}f, {21}f, {22}f, {23}f, {24}f, {25}f, {26}f,\n{27}f, {28}f, {29}f, {30}f, {31}f, {32}f, {33}f, {34}f, {35}f,\n{36}f, {37}f, {38}f, {39}f, {40}f, {41}f, {42}f, {43}f, {44}f,\n{45}f, {46}f, {47}f, {48}f, {49}f, {50}f, {51}f, {52}f, {53}f,\n{54}f, {55}f, {56}f, {57}f, {58}f, {59}f, {60}f, {61}f, {62}f,\n{63}f, {64}f, {65}f, {66}f, {67}f, {68}f, {69}f, {70}f, {71}f,\n{72}f, {73}f, {74}f, {75}f, {76}f, {77}f, {78}f, {79}f, {80}f)", c0.r0, c1.r0, c2.r0, c3.r0, c4.r0, c5.r0, c6.r0, c7.r0, c8.r0, c0.r1, c1.r1, c2.r1, c3.r1, c4.r1, c5.r1, c6.r1, c7.r1, c8.r1, c0.r2, c1.r2, c2.r2, c3.r2, c4.r2, c5.r2, c6.r2, c7.r2, c8.r2, c0.r3, c1.r3, c2.r3, c3.r3, c4.r3, c5.r3, c6.r3, c7.r3, c8.r3, c0.r4, c1.r4, c2.r4, c3.r4, c4.r4, c5.r4, c6.r4, c7.r4, c8.r4, c0.r5, c1.r5, c2.r5, c3.r5, c4.r5, c5.r5, c6.r5, c7.r5, c8.r5, c0.r6, c1.r6, c2.r6, c3.r6, c4.r6, c5.r6, c6.r6, c7.r6, c8.r6, c0.r7, c1.r7, c2.r7, c3.r7, c4.r7, c5.r7, c6.r7, c7.r7, c8.r7, c0.r8, c1.r8, c2.r8, c3.r8, c4.r8, c5.r8, c6.r8, c7.r8, c8.r8);
         }
 
         /// <summary>Returns a string representation of the float9x9 using a specified format and culture-specific format information.</summary>

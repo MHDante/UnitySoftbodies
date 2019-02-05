@@ -235,7 +235,7 @@ namespace Unity.Mathematics
 
         
         /// <summary>Returns the float3 element at a specified index.</summary>
-        unsafe public float3 this[int index]
+        unsafe public ref float3 this[int index]
         {
             get
             {
@@ -243,15 +243,7 @@ namespace Unity.Mathematics
                 if ((uint)index >= 9)
                     throw new System.ArgumentException("index must be between[0...8]");
 #endif
-                fixed (float3x9* array = &this) { return ((float3*)array)[index]; }
-            }
-            set
-            {
-#if ENABLE_UNITY_COLLECTIONS_CHECKS
-                if ((uint)index >= 9)
-                    throw new System.ArgumentException("index must be between[0...8]");
-#endif
-                fixed (float3* array = &c0) { array[index] = value; }
+                fixed (float3x9* array = &this) { return ref ((float3*)array)[index]; }
             }
         }
 
@@ -276,6 +268,22 @@ namespace Unity.Mathematics
         {
             return string.Format("float3x9({0}f, {1}f, {2}f, {3}f, {4}f, {5}f, {6}f, {7}f, {8}f,  {9}f, {10}f, {11}f, {12}f, {13}f, {14}f, {15}f, {16}f, {17}f,  {18}f, {19}f, {20}f, {21}f, {22}f, {23}f, {24}f, {25}f, {26}f)", c0.x.ToString(format, formatProvider), c1.x.ToString(format, formatProvider), c2.x.ToString(format, formatProvider), c3.x.ToString(format, formatProvider), c4.x.ToString(format, formatProvider), c5.x.ToString(format, formatProvider), c6.x.ToString(format, formatProvider), c7.x.ToString(format, formatProvider), c8.x.ToString(format, formatProvider), c0.y.ToString(format, formatProvider), c1.y.ToString(format, formatProvider), c2.y.ToString(format, formatProvider), c3.y.ToString(format, formatProvider), c4.y.ToString(format, formatProvider), c5.y.ToString(format, formatProvider), c6.y.ToString(format, formatProvider), c7.y.ToString(format, formatProvider), c8.y.ToString(format, formatProvider), c0.z.ToString(format, formatProvider), c1.z.ToString(format, formatProvider), c2.z.ToString(format, formatProvider), c3.z.ToString(format, formatProvider), c4.z.ToString(format, formatProvider), c5.z.ToString(format, formatProvider), c6.z.ToString(format, formatProvider), c7.z.ToString(format, formatProvider), c8.z.ToString(format, formatProvider));
         }
-
+        
+        /// <summary>Returns a string representation of the float3x9 using a specified format and culture-specific format information.</summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public float9 row(int i)
+        {
+            return new float9(
+                this.c0[i],
+                this.c1[i],
+                this.c2[i],
+                this.c3[i],
+                this.c4[i],
+                this.c5[i],
+                this.c6[i],
+                this.c7[i],
+                this.c8[i]
+            );
+        }
     }
 }

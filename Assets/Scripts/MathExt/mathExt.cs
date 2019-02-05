@@ -9,11 +9,12 @@ namespace Mathematics.Extensions
     {
         /// <summary>Returns the float3x3 matrix result of a matrix multiplication between a 3x1 column vector and a 1x3 row vector (b Transpose).</summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float3x3 mulT(this in float3 a, in float3 bT) =>
+        public static float3x3 mulT(in float3 a, in float3 bT) =>
             new float3x3(a * bT.x, a * bT.y, a * bT.z);
 
 
-        public static float9x9 mulT(this in float9 a, in float9 bT) =>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float9x9 mulT(in float9 a, in float9 bT) =>
             new float9x9(
                 a * bT.r0,
                 a * bT.r1,
@@ -27,7 +28,8 @@ namespace Mathematics.Extensions
             );
 
 
-        public static float3x9 mulT(this in float3 a, in float9 bT) =>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float3x9 mulT(in float3 a, in float9 bT) =>
             new float3x9(
                 a * bT.r0,
                 a * bT.r1,
@@ -41,7 +43,7 @@ namespace Mathematics.Extensions
             );
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float3 mul(this in float3x9 a, in float9 b)
+        public static float3 mul(in float3x9 a, in float9 b)
         {
             float3 result = new float3();
 
@@ -56,8 +58,26 @@ namespace Mathematics.Extensions
         }
 
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float3x9 mul(in float3x9 a, in float9x9 b)
+        {
+            float3x9 result = new float3x9();
+
+            for (int row = 0; row < 3; row++)
+            {
+                var rowVector = a.row(row);
+                for (int column = 0; column < 9; column++)
+                {
+                    result[column][row] = csum(rowVector * b[column]);
+                }
+            }
+
+            return result;
+        }
+
+
         // Gauss-Jordan inverse algorithm. 
-        public static float9x9 inverse(this in float9x9 a)
+        public static float9x9 inverse(in float9x9 a)
         {
             // rows are columns, ok?
             // index using [row][column]
@@ -98,7 +118,6 @@ namespace Mathematics.Extensions
                 // Row scale to set diagonals to 1
                 {
                     var scale = aT[column][column];
-                    Debug.Assert(scale == max);
 
                     aT[column] /= scale;
                     augmented[column] /= scale;
@@ -116,14 +135,15 @@ namespace Mathematics.Extensions
                     var scale = aT[row][column];
                     if (aT[row][column] == 0) continue;
 
-                    aT[row] -= aT[column] / scale;
-                    augmented[row] -= augmented[column] / scale;
+                    aT[row] -= aT[column] * scale;
+                    augmented[row] -= augmented[column] * scale;
                 }
             }
 
             return augmented.transpose();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float csum(in float9 x) => x.r0 + x.r1 + x.r2 + x.r3 + x.r4 + x.r5 + x.r6 + x.r7 + x.r8;
     }
 
