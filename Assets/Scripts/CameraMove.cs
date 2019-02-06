@@ -19,29 +19,33 @@ public class CameraMove : MonoBehaviour
     void Update()
     {
 
+        var t = transform;
         if (Input.GetMouseButton(1))
         {
             rotationX += Input.GetAxis("Mouse X") * cameraSensitivity * Time.deltaTime;
             rotationY += Input.GetAxis("Mouse Y") * cameraSensitivity * Time.deltaTime;
             rotationY = Mathf.Clamp(rotationY, -90, 90);
-
-            transform.localRotation = Quaternion.AngleAxis(rotationX, Vector3.up);
-            transform.localRotation *= Quaternion.AngleAxis(rotationY, Vector3.left);
+            
+            transform.localRotation = Quaternion.AngleAxis(rotationX, Vector3.up) * Quaternion.AngleAxis(rotationY, Vector3.left);
         }
 
         if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
         {
-            transform.position += transform.forward * (normalMoveSpeed * fastMoveFactor) * Input.GetAxis("Vertical") *
+            var position = t.position;
+            position += t.forward * (normalMoveSpeed * fastMoveFactor) * Input.GetAxis("Vertical") *
                                   Time.deltaTime;
-            transform.position += transform.right * (normalMoveSpeed * fastMoveFactor) * Input.GetAxis("Horizontal") *
+            position += transform.right * (normalMoveSpeed * fastMoveFactor) * Input.GetAxis("Horizontal") *
                                   Time.deltaTime;
+            transform.position = position;
         }
         else if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
         {
-            transform.position += transform.forward * (normalMoveSpeed * slowMoveFactor) * Input.GetAxis("Vertical") *
+            var position = t.position;
+            position += t.forward * (normalMoveSpeed * slowMoveFactor) * Input.GetAxis("Vertical") *
                                   Time.deltaTime;
-            transform.position += transform.right * (normalMoveSpeed * slowMoveFactor) * Input.GetAxis("Horizontal") *
+            position += transform.right * (normalMoveSpeed * slowMoveFactor) * Input.GetAxis("Horizontal") *
                                   Time.deltaTime;
+            transform.position = position;
         }
         else
         {

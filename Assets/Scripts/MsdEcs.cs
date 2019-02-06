@@ -42,7 +42,7 @@ public class MsdEcs : MonoBehaviour
 
         for (var i = 0; i < vertices.Length; i++)
         {
-            var o = GameObject.CreatePrimitive(PrimitiveType.Sphere);// new GameObject("Vertex " + i);
+            var o = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             o.name = $"Particle {i}";
             o.transform.SetParent(parent, false);
             o.transform.localPosition = vertices[i];
@@ -66,7 +66,7 @@ public class MsdEcs : MonoBehaviour
 
         x = new float3[bodies.Length];
         m = new float[bodies.Length];
-        GetPositionsAndMasses(bodies, x, m, false);
+        GetPositionsAndMasses(bodies, x, m);
         x0Cm = CenterOfMass(x, m);
 
         q = x.Select(x0i => x0i - x0Cm).ToArray();
@@ -92,8 +92,13 @@ public class MsdEcs : MonoBehaviour
     public void FixedUpdate()
     {
 
-        GetPositionsAndMasses(bodies, x, m, true);
+        GetPositionsAndMasses(bodies, x, m);
         var xcm = CenterOfMass(x, m);
+
+        //var t = transform;
+        //parent.SetParent(null,true);
+        //t.position = xcm;
+        //parent.SetParent(t,true);
 
         float3x3 Apq = float3x3.zero;
         float3x9 Apq_tilde = float3x9.zero;
@@ -128,7 +133,7 @@ public class MsdEcs : MonoBehaviour
         {
             var rot1 = math.mul(T, q[i]);
             var rot2 = mathExt.mul(T_tilde,  q_tilde[i]);
-            var gi = rot2 + xcm;
+            var gi = rot1 + xcm;
             var diff = gi - x[i];
             DrawPt(x[i], Color.red);
             DrawPt(gi, Color.green);
@@ -160,11 +165,13 @@ public class MsdEcs : MonoBehaviour
 
 
 
-    private void GetPositionsAndMasses(Rigidbody[] rs, float3[] ps, float[] ms, bool includeVelocity)
+    private void GetPositionsAndMasses(Rigidbody[] rs, float3[] ps, float[] ms)
     {
+        var dt = Time.fixedDeltaTime;
         for (int i = 0; i < rs.Length; i++)
         {
-            ps[i] = includeVelocity ? rs[i].position + rs[i].velocity * Time.fixedDeltaTime : rs[i].position;
+            var position = rs[i].position;
+            ps[i] = position + rs[i].velocity * dt;
             ms[i] = rs[i].mass;
         }
     }
