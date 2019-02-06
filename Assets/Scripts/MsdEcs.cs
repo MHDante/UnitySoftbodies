@@ -142,8 +142,6 @@ public class MsdEcs : MonoBehaviour
             var rot2 = mathExt.mul(T_tilde,  q_tilde[i]);
             var gi = rot2 + xcm;
             var diff = gi - x[i];
-            DrawPt(x[i], Color.red);
-            DrawPt(gi, Color.green);
 
 
             var accel = Alpha / Time.fixedDeltaTime * diff;

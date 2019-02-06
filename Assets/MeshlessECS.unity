@@ -127,7 +127,7 @@ PrefabInstance:
     - target: {fileID: 5493569238652429264, guid: 098e1d128ad99bb4a8997fa549113edb,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5493569238652403696, guid: 098e1d128ad99bb4a8997fa549113edb,
         type: 3}
@@ -297,7 +297,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!23 &378278224
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -369,9 +369,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 569973ef3add45744a22e7927818ece9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Alpha: 0.406
-  Beta: 0.244
-  Drag: 1
+  Alpha: 1
+  Beta: 0.022
+  Drag: 0
 --- !u!1 &721730922
 GameObject:
   m_ObjectHideFlags: 0
