@@ -2,36 +2,41 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.SpatialTracking;
 using UnityEngine.XR;
-using UnityEngine.Experimental.Input;
 using InputDevice = UnityEngine.XR.InputDevice;
 
+[RequireComponent(typeof(TrackedPoseDriver), typeof(Rigidbody))]
 public class Grabber : MonoBehaviour
 {
-    public XRNode inputSource;
-    public Rigidbody anchor;
 
     public HashSet<Rigidbody> collidedBodies = new HashSet<Rigidbody>();
-    private List<HingeJoint> joints = new List<HingeJoint>();
+    private List<FixedJoint> joints = new List<FixedJoint>();
 
     private InputDevice device;
+    private TrackedPoseDriver tpd;
+    private Rigidbody anchor;
 
     private void Awake()
     {
+        tpd = GetComponent<TrackedPoseDriver>();
+        anchor = GetComponent<Rigidbody>();
         device = InputDevices.GetDeviceAtXRNode(XRNode.RightHand);
-        Debug.Log("nuts");
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+        var butt = tpd.poseSource == TrackedPoseDriver.TrackedPose.LeftPose
+            ? KeyCode.JoystickButton14
+            : KeyCode.JoystickButton15;
 
-        if (Input.GetKeyDown(inputSource == XRNode.LeftHand ? KeyCode.JoystickButton14 : KeyCode.JoystickButton15))
+
+
+        if (Input.GetKeyDown(butt))
         {
 
-            Debug.Log($"Enter:");
-            joints = collidedBodies.Select(b => b.gameObject.AddComponent<HingeJoint>()).ToList();
+            joints = collidedBodies.Select(b => b.gameObject.AddComponent<FixedJoint>()).ToList();
             foreach (var fixedJoint in joints)
             {
                 fixedJoint.connectedBody = anchor;
@@ -39,7 +44,7 @@ public class Grabber : MonoBehaviour
         }
 
 
-        if (Input.GetKeyUp(inputSource == XRNode.LeftHand ? KeyCode.JoystickButton14 : KeyCode.JoystickButton15))
+        if (Input.GetKeyUp(butt))
         {
             foreach (var joint in joints)
             {

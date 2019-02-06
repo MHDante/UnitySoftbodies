@@ -1,0 +1,56 @@
+{
+    "name": "Controls",
+    "maps": [
+        {
+            "name": "Main",
+            "id": "3fe5b172-00b3-4390-a06b-899f6aaa73e2",
+            "actions": [
+                {
+                    "name": "VRGrabL",
+                    "id": "71c2a03e-6608-47a7-b95d-ac6481c3ff24",
+                    "expectedControlLayout": "",
+                    "bindings": []
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "path": "*/{TriggerButton}",
+                    "interactions": "Press,PressAndRelease",
+                    "processors": "",
+                    "groups": "",
+                    "action": "VRGrabL",
+                    "chainWithPrevious": false,
+                    "isComposite": false,
+                    "isPartOfComposite": false,
+                    "modifiers": ""
+                },
+                {
+                    "name": "",
+                    "path": "*/{Back}",
+                    "interactions": "Press,PressAndRelease",
+                    "processors": "",
+                    "groups": "",
+                    "action": "VRGrabL",
+                    "chainWithPrevious": false,
+                    "isComposite": false,
+                    "isPartOfComposite": false,
+                    "modifiers": ""
+                },
+                {
+                    "name": "",
+                    "path": "<Keyboard>/space",
+                    "interactions": "Press,PressAndRelease",
+                    "processors": "",
+                    "groups": "",
+                    "action": "VRGrabL",
+                    "chainWithPrevious": false,
+                    "isComposite": false,
+                    "isPartOfComposite": false,
+                    "modifiers": ""
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}

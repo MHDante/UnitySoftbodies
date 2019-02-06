@@ -1,11 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
-using Unity.Mathematics;
 using Mathematics.Extensions;
+using Unity.Mathematics;
+using UnityEngine;
 
 public class MsdEcs : MonoBehaviour
 {
+
+   
     [Range(0, 1)]
     public float Alpha = 1;
 
@@ -14,6 +16,8 @@ public class MsdEcs : MonoBehaviour
 
     public float Drag;
 
+
+    private Quaternion initialRotation;
     private Vector3[] vertices;
     private float9[] q_tilde;
     private float3[] q;
@@ -29,7 +33,7 @@ public class MsdEcs : MonoBehaviour
 
     public void Awake()
     {
-
+        initialRotation = transform.rotation;
         //var oldCollider = GetComponent<Collider>();
         meshFilter = GetComponent<MeshFilter>();
 
@@ -95,23 +99,26 @@ public class MsdEcs : MonoBehaviour
         GetPositionsAndMasses(bodies, x, m);
         var xcm = CenterOfMass(x, m);
 
-        //var t = transform;
-        //parent.SetParent(null,true);
-        //t.position = xcm;
-        //parent.SetParent(t,true);
-
         float3x3 Apq = float3x3.zero;
         float3x9 Apq_tilde = float3x9.zero;
 
         for (int i = 0; i < x.Length; i++)
         {
-            var mass = bodies[i].mass;
+            var mass = m[i];
             var pi = x[i] - xcm;
             Apq += mass * mathExt.mulT(pi, q[i]);
             Apq_tilde += mass * mathExt.mulT(pi, q_tilde[i]);
         }
 
         ExtractRotation(ref Apq, ref rq);
+
+        
+        var t = transform;
+        parent.SetParent(null, true);
+        t.position = xcm;
+        t.rotation = initialRotation * rq;
+        parent.SetParent(t, true);
+
 
         var R = new float3x3(rq);
         
@@ -133,7 +140,7 @@ public class MsdEcs : MonoBehaviour
         {
             var rot1 = math.mul(T, q[i]);
             var rot2 = mathExt.mul(T_tilde,  q_tilde[i]);
-            var gi = rot1 + xcm;
+            var gi = rot2 + xcm;
             var diff = gi - x[i];
             DrawPt(x[i], Color.red);
             DrawPt(gi, Color.green);
@@ -157,10 +164,11 @@ public class MsdEcs : MonoBehaviour
     {
         for (int i = 0; i < vertices.Length; i++)
         {
-            vertices[i] = this.transform.InverseTransformPoint(bodies[i].position);
+            vertices[i] = transform.InverseTransformPoint(bodies[i].position);
         }
         meshFilter.mesh.vertices = vertices;
         meshFilter.mesh.RecalculateNormals();
+        meshFilter.mesh.RecalculateBounds();
     }
 
 
