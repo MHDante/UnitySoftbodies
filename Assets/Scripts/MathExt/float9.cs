@@ -269,23 +269,18 @@ namespace Mathematics.Extensions
         public static float9 operator +(float9 val) { return new float9(+val.r0, +val.r1, +val.r2, +val.r3, +val.r4, +val.r5, +val.r6, +val.r7, +val.r8); }
 
         /// <summary>Returns the float element at a specified index.</summary>
-        unsafe public float this[int index]
+        unsafe public ref float this[int index]
         {
             get
             {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
-                if ((uint)index >= 9)
+                if ((uint) index >= 9)
                     throw new System.ArgumentException("index must be between[0...8]");
 #endif
-                fixed (float9* array = &this) { return ((float*)array)[index]; }
-            }
-            set
-            {
-#if ENABLE_UNITY_COLLECTIONS_CHECKS
-                if ((uint)index >= 9)
-                    throw new System.ArgumentException("index must be between[0...8]");
-#endif
-                fixed (float* array = &r0) { array[index] = value; }
+                fixed (float9* array = &this)
+                {
+                    return ref ((float*) array)[index];
+                }
             }
         }
 
