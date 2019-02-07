@@ -369,9 +369,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 569973ef3add45744a22e7927818ece9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Alpha: 1
-  Beta: 0.022
-  Drag: 0
+  Alpha: 0.259
+  Beta: 0.832
+  Drag: 1
+  MatchingMode: 2
+  ShouldUpdatePivot: 1
 --- !u!1 &721730922
 GameObject:
   m_ObjectHideFlags: 0
@@ -528,6 +530,8 @@ MonoBehaviour:
   Alpha: 1
   Beta: 1
   Drag: 0
+  MatchingMode: 0
+  ShouldUpdatePivot: 1
 --- !u!1 &1264068237
 GameObject:
   m_ObjectHideFlags: 0
