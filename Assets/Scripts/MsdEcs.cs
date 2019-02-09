@@ -61,6 +61,7 @@ public class MsdEcs : MonoBehaviour
     private MeshFilter meshFilter;
     private Quaternion initialRotation;
     private Transform particleParent;
+    private Material material;
 
     // collections to avoid re-allocating. Variables are named according to their name in [Muller05]'s paper<
     private float3[] q;
@@ -91,12 +92,19 @@ public class MsdEcs : MonoBehaviour
     private quaternion Rq = quaternion.identity;
     private Vector3[] positions;
 
+    private static readonly int SHADER_Mode	 = Shader.PropertyToID("_Mode");
+    private static readonly int SHADER_T_Tilde = Shader.PropertyToID("_T");
+    private static readonly int SHADER_T	 = Shader.PropertyToID("_T");
+    private static readonly int SHADER_OriginalMatrix = Shader.PropertyToID("_OriginalMatrix");
+    private static readonly int SHADER_x0cm	 = Shader.PropertyToID("_x0cm");
+    private static readonly int SHADER_xcm 	 = Shader.PropertyToID("_xcm");
 
     public void Awake()
     {
         initialRotation = transform.rotation;
-
+        
         meshFilter = GetComponent<MeshFilter>();
+        material = GetComponent<MeshRenderer>().material;
         vertices = meshFilter.mesh.vertices;
 
         worldVertices = new float3[vertices.Length];
@@ -118,11 +126,11 @@ public class MsdEcs : MonoBehaviour
 
         GetPositionsAndMasses(particles, x, m, out x0cm);
         
+        material.SetVector(SHADER_x0cm, new Vector4(x0cm.x,x0cm.y,x0cm.z,1));
+        material.SetMatrix(SHADER_OriginalMatrix, transform.localToWorldMatrix);
+
         for (int i = 0; i < vertices.Length; i++)
         {
-            //{
-            //    vertexToParticleMap[i] = new List<int>();
-            //    vertexOffsets[i] = new List<Vector3>();
             worldVertices[i] = (float3)transform.TransformPoint(vertices[i]) - x0cm;
             worldVertices_tilde[i] = GetQuadratic(worldVertices[i]);
         }
@@ -147,7 +155,9 @@ public class MsdEcs : MonoBehaviour
         var mode = MatchingMode;
 
         GetPositionsAndMasses(particles, x, m, out xcm);
-        
+        material.SetInt(SHADER_Mode, (int)mode);
+        material.SetVector(SHADER_xcm, new Vector4(xcm.x,xcm.y,xcm.z,1));
+
 
         float3x3 Apq = float3x3.zero;
         float3x9 Apq_tilde = float3x9.zero;
@@ -167,9 +177,17 @@ public class MsdEcs : MonoBehaviour
         R = new float3x3(Rq);
 
         if (ShouldUpdatePivot) UpdatePivot(xcm, Rq);
+        
+        Matrix4x4 mat = Matrix4x4.zero;
+        Matrix4x4[] mat_tilde = new Matrix4x4[3];
 
         switch (mode)
         {
+            case MatchingModes.Rigid:
+
+                R.ToOldMatrix(ref mat);
+                material.SetMatrix(SHADER_T, mat);
+                break;
             case MatchingModes.Linear:
                 {
                     var A = math.mul(Apq, Aqq);
@@ -181,6 +199,10 @@ public class MsdEcs : MonoBehaviour
                     A = A / div;
 
                     T = Beta * A + (1 - Beta) * R;
+                    
+                    T.ToOldMatrix(ref mat);
+
+                    material.SetMatrix(SHADER_T, mat);
                     break;
                 }
             case MatchingModes.Quadratic:
@@ -194,6 +216,10 @@ public class MsdEcs : MonoBehaviour
                     // Todo: Can we preserve volume on a 3x9 transformation?
 
                     T_tilde = Beta * A_tilde + (1 - Beta) * R_tilde;
+                    T_tilde.ToOldMatrix(mat_tilde);
+
+                    material.SetMatrixArray("_T_tilde", mat_tilde);
+
                     break;
                 }
         }
@@ -246,56 +272,40 @@ public class MsdEcs : MonoBehaviour
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static float9 GetQuadratic(float3 qi) => new float9(
-        qi.x, qi.y, qi.z,
-        qi.x * qi.x, qi.y * qi.y, qi.z * qi.z,
-        qi.x * qi.y, qi.y * qi.z, qi.z * qi.x);
+    private static float9 GetQuadratic(float3 w) => new float9(
+        w.x, w.y, w.z,
+        w.x * w.x, w.y * w.y, w.z * w.z,
+        w.x * w.y, w.y * w.z, w.z * w.x);
 
 
     private void Update()
     {
-
-        //for (int i = 0; i < particles.Length; i++)
+        
+        //for (var i = 0; i < vertices.Length; i++)
         //{
-        //    positions[i] = transform.InverseTransformPoint(particles[i].position);
+        //    float3 vert;
+        //    switch (MatchingMode)
+        //    {
+        //        case MatchingModes.Rigid:
+        //            vert = math.mul(R, worldVertices[i]);
+        //            break;
+        //        case MatchingModes.Linear:
+        //            vert = math.mul(T, worldVertices[i]);
+        //            break;
+        //        case MatchingModes.Quadratic:
+        //            vert = mathExt.mul(T_tilde, worldVertices_tilde[i]);
+        //            break;
+        //        default:
+        //            throw new ArgumentOutOfRangeException();
+        //    }
+        //    vert += xcm;
+        //    vert = transform.InverseTransformPoint(vert);
+        //    vertices[i] = vert;
         //}
 
-        for (var i = 0; i < vertices.Length; i++)
-        {
-            //var particleIndices = vertexToParticleMap[i];
-            //var offsets = vertexOffsets[i];
-
-            //for (var j = 0; j < particleIndices.Count; j++)
-            //{
-            //    var particle = positions[particleIndices[j]];
-            //    var offset = offsets[j];
-            //    vertices[i] = particle + offset;
-            //}
-
-            float3 vert;
-            switch (MatchingMode)
-            {
-                case MatchingModes.Rigid:
-                    vert = math.mul(R, worldVertices[i]);
-                    break;
-                case MatchingModes.Linear:
-                    vert = math.mul(T, worldVertices[i]);
-                    break;
-                case MatchingModes.Quadratic:
-                    vert = mathExt.mul(T_tilde, worldVertices_tilde[i]);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-
-            vert += xcm;
-            vert = transform.InverseTransformPoint(vert);
-            vertices[i] = vert;
-        }
-
-        meshFilter.mesh.vertices = vertices;
-        //meshFilter.mesh.RecalculateNormals();
-        meshFilter.mesh.RecalculateBounds();
+        //meshFilter.mesh.vertices = vertices;
+        ////meshFilter.mesh.RecalculateNormals();
+        //meshFilter.mesh.RecalculateBounds();
 
         if (Drag != oldDrag)
         {
@@ -445,6 +455,7 @@ public class MsdEcs : MonoBehaviour
         var rb = o.AddComponent<Rigidbody>();
         rb.freezeRotation = true;
         rb.drag = Drag;
+        rb.useGravity = true;
         rb.mass = ParticleMass;
         rb.constraints = RigidbodyConstraints.FreezeRotation;
         return rb;
@@ -464,9 +475,9 @@ public class MsdEcs : MonoBehaviour
 
 public enum MatchingModes
 {
-    Rigid,
-    Linear,
-    Quadratic
+    Rigid = 0,
+    Linear = 1,
+    Quadratic = 2
 }
 
 

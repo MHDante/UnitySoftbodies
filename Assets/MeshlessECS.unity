@@ -137,7 +137,7 @@ PrefabInstance:
     - target: {fileID: 5493569238652403696, guid: 098e1d128ad99bb4a8997fa549113edb,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.338
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5493569238652403696, guid: 098e1d128ad99bb4a8997fa549113edb,
         type: 3}
@@ -187,23 +187,23 @@ PrefabInstance:
     - target: {fileID: 5493569238652403696, guid: 098e1d128ad99bb4a8997fa549113edb,
         type: 3}
       propertyPath: m_LocalScale.x
-      value: 0.1
+      value: 0.2
       objectReference: {fileID: 0}
     - target: {fileID: 5493569238652403696, guid: 098e1d128ad99bb4a8997fa549113edb,
         type: 3}
       propertyPath: m_LocalScale.y
-      value: 0.1
+      value: 0.2
       objectReference: {fileID: 0}
     - target: {fileID: 5493569238652403696, guid: 098e1d128ad99bb4a8997fa549113edb,
         type: 3}
       propertyPath: m_LocalScale.z
-      value: 0.1
+      value: 0.2
       objectReference: {fileID: 0}
     - target: {fileID: 5493569238650502416, guid: 098e1d128ad99bb4a8997fa549113edb,
         type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 10302, guid: 0000000000000000f000000000000000, type: 0}
+      objectReference: {fileID: 2100000, guid: 78b502edc9d769947b3ffff3cb28b9b6, type: 2}
     - target: {fileID: 5493569238650502416, guid: 098e1d128ad99bb4a8997fa549113edb,
         type: 3}
       propertyPath: m_Enabled
@@ -443,7 +443,7 @@ MonoBehaviour:
   ParticleDistance: 0.2
   ParticleSize: 0.2
   ParticleMass: 0.008
-  ParticleOverlap: 1
+  ParticleOverlap: 0
 --- !u!135 &467472424
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -474,7 +474,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: 78b502edc9d769947b3ffff3cb28b9b6, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -511,7 +511,7 @@ Transform:
   m_GameObject: {fileID: 467472422}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0.146, z: 0.211}
-  m_LocalScale: {x: 0.2, y: 0.2, z: 0.2}
+  m_LocalScale: {x: 0.4, y: 0.4, z: 0.4}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 5
@@ -669,9 +669,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 569973ef3add45744a22e7927818ece9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Alpha: 0.861
+  Alpha: 1
   Beta: 0.256
-  Drag: 1
+  Drag: 0
   MatchingMode: 2
   ShouldUpdatePivot: 1
   ParticleDistance: 0.2
