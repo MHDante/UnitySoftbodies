@@ -61,7 +61,6 @@ public class MsdEcs : MonoBehaviour
     // Object properties
     private MeshFilter meshFilter;
     private Quaternion initialRotation;
-    private Transform particleParent;
     private Material material;
 
     // collections to avoid re-allocating. Variables are named according to their name in [Muller05]'s paper<
@@ -278,10 +277,10 @@ public class MsdEcs : MonoBehaviour
     private void UpdatePivot(in float3 xcm, in quaternion rotDif)
     {
         var t = transform;
-        particleParent.SetParent(null, true);
+        //particleParent.SetParent(null, true);
         t.position = xcm;
         //t.rotation = initialRotation * rotDif;
-        particleParent.SetParent(t, true);
+        //particleParent.SetParent(t, true);
     }
 
     // [Muller16]
@@ -378,8 +377,9 @@ public class MsdEcs : MonoBehaviour
         var result = new List<Rigidbody>(100);
         var colliders = new List<Collider>(100);
 
-        particleParent = new GameObject("Particles").transform;
-        particleParent.SetParent(transform, false);
+        var particleParent = new GameObject("Particles").transform;
+        particleParent.localScale = transform.localScale;
+        //particleParent.SetParent(transform, false);
 
         var t = transform;
         var halfC = ParticleDistance / 2;
@@ -434,7 +434,7 @@ public class MsdEcs : MonoBehaviour
                     //    vertexToParticleMap[l].Add(result.Count);
                     //    vertexOffsets[l].Add(offset);
                     //}
-                    result.Add(MakeParticle(center, colliders));
+                    result.Add(MakeParticle(center, colliders, particleParent));
                 }
             }
         }
@@ -451,19 +451,19 @@ public class MsdEcs : MonoBehaviour
         var result = new Rigidbody[vertices.Length];
         var colliders = new List<Collider>();
 
-        particleParent = new GameObject("Particles").transform;
+        var particleParent = new GameObject("Particles").transform;
         particleParent.SetParent(transform, false);
 
         for (var i = 0; i < result.Length; i++)
         {
-            var rb = MakeParticle(vertices[i], colliders);
+            var rb = MakeParticle(vertices[i], colliders, particleParent);
             result[i] = rb;
         }
 
         return result;
     }
 
-    private Rigidbody MakeParticle(Vector3 localPosition, List<Collider> colliders)
+    private Rigidbody MakeParticle(Vector3 localPosition, List<Collider> colliders, Transform particleParent)
     {
         var o = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         o.GetComponent<MeshRenderer>().enabled = false;

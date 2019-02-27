@@ -86,38 +86,38 @@ namespace Mathematics.Extensions
         {
             result.x =
               a.c0.x * b.r0
-            + a.c0.x * b.r1
-            + a.c0.x * b.r2
-            + a.c0.x * b.r3
-            + a.c0.x * b.r4
-            + a.c0.x * b.r5
-            + a.c0.x * b.r6
-            + a.c0.x * b.r7
-            + a.c0.x * b.r8;
+            + a.c1.x * b.r1
+            + a.c2.x * b.r2
+            + a.c3.x * b.r3
+            + a.c4.x * b.r4
+            + a.c5.x * b.r5
+            + a.c6.x * b.r6
+            + a.c7.x * b.r7
+            + a.c8.x * b.r8;
 
             
             result.y =
               a.c0.y * b.r0
-            + a.c0.y * b.r1
-            + a.c0.y * b.r2
-            + a.c0.y * b.r3
-            + a.c0.y * b.r4
-            + a.c0.y * b.r5
-            + a.c0.y * b.r6
-            + a.c0.y * b.r7
-            + a.c0.y * b.r8;
+            + a.c1.y * b.r1
+            + a.c2.y * b.r2
+            + a.c3.y * b.r3
+            + a.c4.y * b.r4
+            + a.c5.y * b.r5
+            + a.c6.y * b.r6
+            + a.c7.y * b.r7
+            + a.c8.y * b.r8;
 
             
             result.z =
               a.c0.z * b.r0
-            + a.c0.z * b.r1
-            + a.c0.z * b.r2
-            + a.c0.z * b.r3
-            + a.c0.z * b.r4
-            + a.c0.z * b.r5
-            + a.c0.z * b.r6
-            + a.c0.z * b.r7
-            + a.c0.z * b.r8;
+            + a.c1.z * b.r1
+            + a.c2.z * b.r2
+            + a.c3.z * b.r3
+            + a.c4.z * b.r4
+            + a.c5.z * b.r5
+            + a.c6.z * b.r6
+            + a.c7.z * b.r7
+            + a.c8.z * b.r8;
         }
 
 
