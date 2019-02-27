@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices.ComTypes;
 using Mathematics.Extensions;
+using Unity.Burst;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -54,7 +55,7 @@ public class MsdEcs : MonoBehaviour
     public float ParticleSize = .2f;
     [Min(0.001f)]
     public float ParticleMass = 0.008f;
-    [Range(0,1)]
+    [Range(0, 1)]
     public float ParticleOverlap = 1;
 
     // Object properties
@@ -92,17 +93,18 @@ public class MsdEcs : MonoBehaviour
     private quaternion Rq = quaternion.identity;
     private Vector3[] positions;
 
-    private static readonly int SHADER_Mode	 = Shader.PropertyToID("_Mode");
+    private static readonly int SHADER_Mode = Shader.PropertyToID("_Mode");
     private static readonly int SHADER_T_Tilde = Shader.PropertyToID("_T");
-    private static readonly int SHADER_T	 = Shader.PropertyToID("_T");
+    private static readonly int SHADER_T = Shader.PropertyToID("_T");
     private static readonly int SHADER_OriginalMatrix = Shader.PropertyToID("_OriginalMatrix");
-    private static readonly int SHADER_x0cm	 = Shader.PropertyToID("_x0cm");
-    private static readonly int SHADER_xcm 	 = Shader.PropertyToID("_xcm");
+    private static readonly int SHADER_x0cm = Shader.PropertyToID("_x0cm");
+    private static readonly int SHADER_xcm = Shader.PropertyToID("_xcm");
+    private static int counter;
 
     public void Awake()
     {
         initialRotation = transform.rotation;
-        
+
         meshFilter = GetComponent<MeshFilter>();
         material = GetComponent<MeshRenderer>().material;
         vertices = meshFilter.mesh.vertices;
@@ -112,10 +114,10 @@ public class MsdEcs : MonoBehaviour
         //worldVertices_tilde = new float9[vertices.Length];
         //vertexToParticleMap = new List<int>[vertices.Length];
         //vertexOffsets = new List<Vector3>[vertices.Length];
-        
+
         particles = CreateParticleLattice();
-        
-        positions  = new Vector3[particles.Length];
+
+        positions = new Vector3[particles.Length];
         // Initial allocations
         x = new float3[particles.Length];
         m = new float[particles.Length];
@@ -125,8 +127,8 @@ public class MsdEcs : MonoBehaviour
         Aqq_tilde = float9x9.zero;
 
         GetPositionsAndMasses(particles, x, m, out x0cm);
-        
-        material.SetVector(SHADER_x0cm, new Vector4(x0cm.x,x0cm.y,x0cm.z,1));
+
+        material.SetVector(SHADER_x0cm, new Vector4(x0cm.x, x0cm.y, x0cm.z, 1));
         material.SetMatrix(SHADER_OriginalMatrix, transform.localToWorldMatrix);
 
         for (int i = 0; i < vertices.Length; i++)
@@ -134,13 +136,16 @@ public class MsdEcs : MonoBehaviour
             worldVertices[i] = (float3)transform.TransformPoint(vertices[i]) - x0cm;
             worldVertices_tilde[i] = GetQuadratic(worldVertices[i]);
         }
+
+        float3x3 temp = float3x3.zero;
         // We calculate the quadratic terms and Aqq matrices regardless of the mode in case it gets switched at runtime.
         for (int i = 0; i < x.Length; i++)
         {
             q[i] = x[i] - x0cm;
             q_tilde[i] = GetQuadratic(q[i]);
-            Aqq += m[i] * mathExt.mulT(q[i], q[i]);
-            Aqq_tilde += m[i] * mathExt.mulT(q_tilde[i], q_tilde[i]);
+            mathExt.mulT(m[i] * q[i], q[i], ref temp);
+            Aqq += temp;
+            Aqq_tilde +=  mathExt.mulT(m[i] *q_tilde[i], q_tilde[i]);
         }
 
         Aqq = math.inverse(Aqq);
@@ -150,38 +155,59 @@ public class MsdEcs : MonoBehaviour
 
 
     // The contents of this method are outlined in [Muller05]
+    [BurstCompile]
     public void FixedUpdate()
     {
-        var mode = MatchingMode;
-
         GetPositionsAndMasses(particles, x, m, out xcm);
-        material.SetInt(SHADER_Mode, (int)mode);
-        material.SetVector(SHADER_xcm, new Vector4(xcm.x,xcm.y,xcm.z,1));
+        material.SetInt(SHADER_Mode, (int)MatchingMode);
+        material.SetVector(SHADER_xcm, new Vector4(xcm.x, xcm.y, xcm.z, 1));
 
-
-        float3x3 Apq = float3x3.zero;
-        float3x9 Apq_tilde = float3x9.zero;
-
-        for (int i = 0; i < x.Length; i++)
-        {
-            var pi = x[i] - xcm;
-            Apq += m[i] * mathExt.mulT(pi, q[i]);
-
-            if (MatchingMode == MatchingModes.Quadratic)
-                Apq_tilde += m[i] * mathExt.mulT(pi, q_tilde[i]);
-        }
-
+        GetApqMatrix(out var Apq, out var Apq_tilde);
 
         // This part is different. It doesn't use polar decomposition. It instead uses the method outlined in [Muller16]
         ExtractRotation(ref Apq, ref Rq);
+
         R = new float3x3(Rq);
 
         if (ShouldUpdatePivot) UpdatePivot(xcm, Rq);
-        
+
+        GetTransformations(Apq, Apq_tilde);
+
+        ApplyGoalPositions();
+    }
+
+    private void ApplyGoalPositions()
+    {
+        for (int i = 0; i < x.Length; i++)
+        {
+            float3 gi = float3.zero;
+            switch (MatchingMode)
+            {
+                case MatchingModes.Rigid:
+                    gi = math.mul(R, q[i]) + xcm;
+                    break;
+                case MatchingModes.Linear:
+                    gi = math.mul(T, q[i]) + xcm;
+                    break;
+                case MatchingModes.Quadratic:
+                    mathExt.mul(T_tilde, q_tilde[i], ref gi);
+                    gi += xcm;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            var accel = (Alpha / Time.fixedDeltaTime) * (gi - x[i]);
+            particles[i].AddForce(accel, ForceMode.VelocityChange);
+        }
+    }
+
+    private void GetTransformations(in float3x3 Apq, in float3x9 Apq_tilde)
+    {
         Matrix4x4 mat = Matrix4x4.zero;
         Matrix4x4[] mat_tilde = new Matrix4x4[3];
 
-        switch (mode)
+        switch (MatchingMode)
         {
             case MatchingModes.Rigid:
 
@@ -199,7 +225,7 @@ public class MsdEcs : MonoBehaviour
                     A = A / div;
 
                     T = Beta * A + (1 - Beta) * R;
-                    
+
                     T.ToOldMatrix(ref mat);
 
                     material.SetMatrix(SHADER_T, mat);
@@ -223,27 +249,29 @@ public class MsdEcs : MonoBehaviour
                     break;
                 }
         }
+    }
+
+    private void GetApqMatrix(out float3x3 Apq, out float3x9 Apq_tilde)
+    {
+        Apq = float3x3.zero;
+        Apq_tilde = float3x9.zero;
+        float3x3 temp = float3x3.zero;
+        float3x9 temp2 = float3x9.zero;
 
         for (int i = 0; i < x.Length; i++)
         {
-            float3 gi;
-            switch (mode)
-            {
-                case MatchingModes.Rigid:
-                    gi = math.mul(R, q[i]) + xcm;
-                    break;
-                case MatchingModes.Linear:
-                    gi = math.mul(T, q[i]) + xcm;
-                    break;
-                case MatchingModes.Quadratic:
-                    gi = mathExt.mul(T_tilde, q_tilde[i]) + xcm;
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+            var pi = x[i] - xcm;
 
-            var accel = (Alpha / Time.fixedDeltaTime) * (gi - x[i]);
-            particles[i].AddForce(accel, ForceMode.VelocityChange);
+            mathExt.mulT(m[i] * pi, q[i], ref temp);
+            mathExt.PlusEquals(ref Apq, temp);
+
+            if (MatchingMode == MatchingModes.Quadratic)
+            {
+
+               mathExt.mulT(m[i] * pi, q_tilde[i], ref temp2);
+               mathExt.PlusEquals(ref Apq_tilde, temp2);
+               ;
+            }
         }
     }
 
@@ -257,7 +285,7 @@ public class MsdEcs : MonoBehaviour
     }
 
     // [Muller16]
-    void ExtractRotation(ref float3x3 a, ref quaternion r, int maxIterations = 9)
+    static void ExtractRotation(ref float3x3 a, ref quaternion r, int maxIterations = 9)
     {
         for (var i = 0; i < maxIterations; i++)
         {
@@ -280,7 +308,7 @@ public class MsdEcs : MonoBehaviour
 
     private void Update()
     {
-        
+
         //for (var i = 0; i < vertices.Length; i++)
         //{
         //    float3 vert;
@@ -371,7 +399,7 @@ public class MsdEcs : MonoBehaviour
         );
 
         Collider[] results = new Collider[5];
-        
+
         var halfextents = worldExtents * .5f * ParticleDistance;
         var diff = Vector3.one * ParticleDistance * (1 + ParticleOverlap);
 
@@ -402,7 +430,7 @@ public class MsdEcs : MonoBehaviour
 
                     //    if(math.any(absOffset > maxOffset))
                     //        continue;
-                        
+
                     //    vertexToParticleMap[l].Add(result.Count);
                     //    vertexOffsets[l].Add(offset);
                     //}
@@ -410,7 +438,7 @@ public class MsdEcs : MonoBehaviour
                 }
             }
         }
-        
+
 
 
         Destroy(oldCollider);
@@ -439,7 +467,7 @@ public class MsdEcs : MonoBehaviour
     {
         var o = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         o.GetComponent<MeshRenderer>().enabled = false;
-        o.name = "Particle";
+        o.name = $"Particle {counter++}";
         o.transform.SetParent(particleParent, false);
         o.transform.localPosition = localPosition;
         var c = o.GetComponent<SphereCollider>();
@@ -451,7 +479,7 @@ public class MsdEcs : MonoBehaviour
         colliders.Add(c);
         //c.radius = 0.1f;
         o.transform.localScale = Vector3.one * ParticleSize;
-        
+
         var rb = o.AddComponent<Rigidbody>();
         rb.freezeRotation = true;
         rb.drag = Drag;

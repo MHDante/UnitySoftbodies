@@ -1,7 +1,8 @@
 {
     "name": "Mathematics.Extensions",
     "references": [
-        "Unity.Mathematics"
+        "Unity.Mathematics",
+        "Unity.Burst"
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [],
