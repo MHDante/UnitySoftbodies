@@ -124,6 +124,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: Monkeh
       objectReference: {fileID: 0}
+    - target: {fileID: 5493569238652429264, guid: 098e1d128ad99bb4a8997fa549113edb,
+        type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
     - target: {fileID: 5493569238652403696, guid: 098e1d128ad99bb4a8997fa549113edb,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -189,7 +194,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1210630962, guid: 098e1d128ad99bb4a8997fa549113edb, type: 3}
       propertyPath: ParticleOptions.Size
-      value: 0.1
+      value: 0.2
       objectReference: {fileID: 0}
     - target: {fileID: 1210630962, guid: 098e1d128ad99bb4a8997fa549113edb, type: 3}
       propertyPath: ParticleOptions.PhysicsMaterial
@@ -203,6 +208,18 @@ PrefabInstance:
     - target: {fileID: 1210630962, guid: 098e1d128ad99bb4a8997fa549113edb, type: 3}
       propertyPath: Beta
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1210630962, guid: 098e1d128ad99bb4a8997fa549113edb, type: 3}
+      propertyPath: ParticleOptions.layer.m_Bits
+      value: 256
+      objectReference: {fileID: 0}
+    - target: {fileID: 1210630962, guid: 098e1d128ad99bb4a8997fa549113edb, type: 3}
+      propertyPath: ParticleOptions.layer
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1210630962, guid: 098e1d128ad99bb4a8997fa549113edb, type: 3}
+      propertyPath: ParticleOptions.Mode
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 098e1d128ad99bb4a8997fa549113edb, type: 3}
@@ -389,7 +406,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Alpha: 0.259
   Beta: 0.832
-  Drag: 1
   MatchingMode: 2
   ParticleOptions:
     Distance: 0.1
@@ -398,6 +414,7 @@ MonoBehaviour:
     Shape: 0
     PhysicsMaterial: {fileID: 0}
     Mode: 0
+    Drag: 0
   meshFilter: {fileID: 0}
   q: []
   q_tilde: []
@@ -621,6 +638,10 @@ MonoBehaviour:
   particleParent: {fileID: 0}
   origVertices: []
   origVertices_tilde: []
+  origNormals: []
+  origNormals_tilde: []
+  origTangents: []
+  origTangents_tilde: []
   vertices: []
   normals: []
   tangents: []
@@ -661,7 +682,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Alpha: 0.699
   Beta: 0.445
-  Drag: 0
   MatchingMode: 2
   ParticleOptions:
     Distance: 0.1
@@ -670,6 +690,7 @@ MonoBehaviour:
     Shape: 0
     PhysicsMaterial: {fileID: 0}
     Mode: 0
+    Drag: 0
   meshFilter: {fileID: 0}
   q: []
   q_tilde: []
@@ -893,6 +914,10 @@ MonoBehaviour:
   particleParent: {fileID: 0}
   origVertices: []
   origVertices_tilde: []
+  origNormals: []
+  origNormals_tilde: []
+  origTangents: []
+  origTangents_tilde: []
   vertices: []
   normals: []
   tangents: []
@@ -1600,11 +1625,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f40a138738bed0444a77b9ac5e1fb1bb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cameraSensitivity: 45
-  climbSpeed: 2
-  normalMoveSpeed: 5
-  slowMoveFactor: 0.5
-  fastMoveFactor: 1.5
+  CameraSensitivity: 45
+  ClimbSpeed: 2
+  NormalMoveSpeed: 5
+  SlowMoveFactor: 0.5
+  FastMoveFactor: 1.5
 --- !u!20 &1974106661
 Camera:
   m_ObjectHideFlags: 0

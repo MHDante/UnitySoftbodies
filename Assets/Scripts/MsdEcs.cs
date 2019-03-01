@@ -38,9 +38,6 @@ public class MsdEcs : MonoBehaviour
          "Interpolation between 0: rotation only or 1: shearing/bending. Works only on Linear and Quadratic Modes.")]
     public float Beta = 0;
 
-    [Min(0f), Tooltip("Dampening of velocity. This is applied to all particle rigidbodies")]
-    public float Drag = 0;
-    private float oldDrag;
 
     [Tooltip("The matching mode determines how the shape can deform. All modes allow small deformations, but this controls changes in the " +
              "overall frame of the shape. Rigid allows only rotations. Linear allows only shears and stretches. Quadratic allows bending. ")]
@@ -75,17 +72,21 @@ public class MsdEcs : MonoBehaviour
     [SerializeField, HideInInspector] private float3x9 T_tilde;     // Quadratic T
 
     // Particles are represented by tiny rigidbodies in the physics system.
-    [SerializeField, HideInInspector] private Rigidbody[] particles; 
+    [SerializeField, HideInInspector] private Rigidbody[] particles;
     [SerializeField, HideInInspector] private Transform particleParent;
 
     // This is ultimately the data that we wish to modify.
     [SerializeField, HideInInspector] private float3[] origVertices; // The positions of the mesh vertices relative to the center of mass.      
     [SerializeField, HideInInspector] private float9[] origVertices_tilde;
+    [SerializeField, HideInInspector] private float3[] origNormals;
+    [SerializeField, HideInInspector] private float9[] origNormals_tilde;
+    [SerializeField, HideInInspector] private float3[] origTangents;
+    [SerializeField, HideInInspector] private float9[] origTangents_tilde;
 
     // We populate these arrays with transformed data and send it back to the mesh filter
     [SerializeField, HideInInspector] private Vector3[] vertices;
     [SerializeField, HideInInspector] private Vector3[] normals;
-    [SerializeField, HideInInspector] private Vector4[] tangents; 
+    [SerializeField, HideInInspector] private Vector4[] tangents;
 
     // These variables are used to match the pivot of this object to the particle's motion.
     [SerializeField, HideInInspector] private Quaternion initialRotation;
@@ -95,14 +96,14 @@ public class MsdEcs : MonoBehaviour
     public void Awake()
     {
         initialRotation = transform.rotation;
-
+        prevPos = transform.position;
+        prevRot = transform.rotation;
         meshFilter = GetComponent<MeshFilter>();
         var mesh = meshFilter.mesh;
         mesh.MarkDynamic();
         vertices = mesh.vertices;
         normals = mesh.normals;
         tangents = mesh.tangents;
-
 
         switch (ParticleOptions.Mode)
         {
@@ -117,9 +118,14 @@ public class MsdEcs : MonoBehaviour
         }
 
         // Initial allocations
-        
+
         origVertices = new float3[vertices.Length];
         origVertices_tilde = new float9[vertices.Length];
+        origNormals = new float3[vertices.Length];
+        origNormals_tilde = new float9[vertices.Length];
+        origTangents = new float3[vertices.Length];
+        origTangents_tilde = new float9[vertices.Length];
+
         x = new float3[particles.Length];
         m = new float[particles.Length];
         q = new float3[particles.Length];
@@ -135,6 +141,12 @@ public class MsdEcs : MonoBehaviour
         {
             origVertices[i] = (float3)transform.TransformPoint(vertices[i]) - x0cm;
             origVertices_tilde[i] = GetQuadratic(origVertices[i]);
+
+            origNormals[i] = transform.TransformDirection(normals[i]);
+            origNormals_tilde[i] = GetQuadratic(origNormals[i]);
+
+            origTangents[i] = transform.TransformDirection(tangents[i]);
+            origTangents_tilde[i] = GetQuadratic(origTangents[i]);
         }
 
         float3x3 temp = float3x3.zero;
@@ -151,8 +163,6 @@ public class MsdEcs : MonoBehaviour
         Aqq = math.inverse(Aqq);
         Aqq_tilde = mathExt.inverse(Aqq_tilde);
     }
-
-
 
     // The contents of this method are outlined in [Muller05]
     [BurstCompile]
@@ -176,6 +186,53 @@ public class MsdEcs : MonoBehaviour
         ApplyGoalPositions();
     }
 
+    [BurstCompile]
+    private void Update()
+    {
+        // Update Mesh
+        for (var i = 0; i < vertices.Length; i++)
+        {
+            float3 vert = float3.zero;
+            float3 tan = float3.zero;
+            float3 norm = float3.zero;
+            switch (MatchingMode)
+            {
+                case MatchingModes.Rigid:
+                    vert = math.mul(R, origVertices[i]);
+                    norm = math.mul(R, origNormals[i]);
+                    tan = math.mul(R, origTangents[i]);
+
+                    break;
+                case MatchingModes.Linear:
+                    vert = math.mul(T, origVertices[i]);
+                    norm = math.mul(T, origNormals[i]);
+                    tan = math.mul(T, origTangents[i]);
+                    break;
+                case MatchingModes.Quadratic:
+                    mathExt.mul(T_tilde, origVertices_tilde[i], ref vert);
+                    mathExt.mul(T_tilde, origNormals_tilde[i], ref norm);
+                    mathExt.mul(T_tilde, origTangents_tilde[i], ref tan);
+
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            vert += xcm;
+            vertices[i] = transform.InverseTransformPoint(vert);
+            normals[i] = transform.InverseTransformDirection(norm);
+            tan = transform.InverseTransformDirection(tan);
+            tangents[i].x = tan.x;
+            tangents[i].y = tan.y;
+            tangents[i].z = tan.z;
+        }
+
+        meshFilter.mesh.vertices = vertices;
+        meshFilter.mesh.normals = normals;
+        meshFilter.mesh.tangents = tangents;
+    }
+
+
     private void MatchPivot()
     {
         var t = transform;
@@ -197,7 +254,6 @@ public class MsdEcs : MonoBehaviour
                 particle.position = pos + t.position - prevPos;
             }
         }
-
     }
 
     private void ApplyGoalPositions()
@@ -229,14 +285,12 @@ public class MsdEcs : MonoBehaviour
     private void GetTransformations(in float3x3 Apq, in float3x9 Apq_tilde)
     {
         Matrix4x4 mat = Matrix4x4.zero;
-        Matrix4x4[] mat_tilde = new Matrix4x4[3];
 
         switch (MatchingMode)
         {
             case MatchingModes.Rigid:
 
                 R.ToOldMatrix(ref mat);
-                //material.SetMatrix(SHADER_T, mat);
                 break;
             case MatchingModes.Linear:
                 {
@@ -251,8 +305,6 @@ public class MsdEcs : MonoBehaviour
                     T = Beta * A + (1 - Beta) * R;
 
                     T.ToOldMatrix(ref mat);
-
-                    //material.SetMatrix(SHADER_T, mat);
                     break;
                 }
             case MatchingModes.Quadratic:
@@ -266,9 +318,6 @@ public class MsdEcs : MonoBehaviour
                     // Todo: Can we preserve volume on a 3x9 transformation?
 
                     T_tilde = Beta * A_tilde + (1 - Beta) * R_tilde;
-                    T_tilde.ToOldMatrix(mat_tilde);
-
-                    //material.SetMatrixArray("_T_tilde", mat_tilde);
 
                     break;
                 }
@@ -287,12 +336,12 @@ public class MsdEcs : MonoBehaviour
             var pi = x[i] - xcm;
 
             mathExt.mulT(m[i] * pi, q[i], ref temp);
-            mathExt.PlusEquals(ref Apq, temp);
+            mathExt.plusEquals(ref Apq, temp);
 
             if (MatchingMode == MatchingModes.Quadratic)
             {
                 mathExt.mulT(m[i] * pi, q_tilde[i], ref temp2);
-                mathExt.PlusEquals(ref Apq_tilde, temp2);
+                mathExt.plusEquals(ref Apq_tilde, temp2);
             }
         }
     }
@@ -319,47 +368,8 @@ public class MsdEcs : MonoBehaviour
         w.x * w.y, w.y * w.z, w.z * w.x);
 
 
-    private void Update()
-    {
-        for (var i = 0; i < vertices.Length; i++)
-        {
-            float3 vert = float3.zero;
-            switch (MatchingMode)
-            {
-                case MatchingModes.Rigid:
-                    vert = math.mul(R, origVertices[i]);
-                    break;
-                case MatchingModes.Linear:
-                    vert = math.mul(T, origVertices[i]);
-                    break;
-                case MatchingModes.Quadratic:
-                    mathExt.mul(T_tilde, origVertices_tilde[i], ref vert);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-            vert += xcm;
-            vert = transform.InverseTransformPoint(vert);
-            vertices[i] = vert;
-        }
-
-        meshFilter.mesh.vertices = vertices;
-        meshFilter.mesh.RecalculateNormals();
-        meshFilter.mesh.RecalculateBounds();
-
-        if (Drag != oldDrag)
-        {
-            oldDrag = Drag;
-            foreach (var body in particles)
-            {
-                body.drag = Drag;
-            }
-        }
-    }
-
     private void GetPositionsAndMasses(Rigidbody[] rs, float3[] ps, float[] ms, out float3 centerOfMass)
     {
-
         float3 weightedSum = float3.zero;
         float totalMass = 0;
 
@@ -367,10 +377,16 @@ public class MsdEcs : MonoBehaviour
         for (int i = 0; i < rs.Length; i++)
         {
             var position = rs[i].position;
-            ps[i] = position + rs[i].velocity * dt;
+            var vel = rs[i].velocity;
+            ps[i].x = position.x + vel.x * dt;
+            ps[i].y = position.y + vel.y * dt;
+            ps[i].z = position.z + vel.z * dt;
+
             ms[i] = rs[i].mass;
 
-            weightedSum += ps[i] * ms[i];
+            weightedSum.x += ps[i].x * ms[i];
+            weightedSum.y += ps[i].y * ms[i];
+            weightedSum.z += ps[i].z * ms[i];
             totalMass += ms[i];
         }
 
@@ -482,10 +498,11 @@ public class MsdEcs : MonoBehaviour
 
         var rb = o.AddComponent<Rigidbody>();
         rb.freezeRotation = true;
-        rb.drag = Drag;
+        rb.drag = ParticleOptions.Drag;
         rb.useGravity = true;
         rb.mass = ParticleOptions.Mass;
         c.sharedMaterial = ParticleOptions.PhysicsMaterial;
+        o.layer = gameObject.layer;
         return rb;
     }
 
@@ -518,6 +535,9 @@ public struct ParticleOptions
     public PrimitiveType Shape;
     public PhysicMaterial PhysicsMaterial;
     public ParticleModes Mode;
+
+    [Min(0f), Tooltip("Dampening of velocity. This is applied to all particle rigidbodies")]
+    public float Drag;
 }
 
 public enum ParticleModes

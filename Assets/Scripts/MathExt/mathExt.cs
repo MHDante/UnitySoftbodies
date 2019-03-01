@@ -1,4 +1,5 @@
-﻿using System;
+﻿// ReSharper disable InconsistentNaming - Using Unity math naming convention
+using System;
 using System.Runtime.CompilerServices;
 using Unity.Burst;
 using Unity.Mathematics;
@@ -17,13 +18,11 @@ namespace Mathematics.Extensions
             result.c0.x = a.x * bT.x;
             result.c1.x = a.x * bT.y;
             result.c2.x = a.x * bT.z;
-
             
             result.c0.y = a.y * bT.x;
             result.c1.y = a.y * bT.y;
             result.c2.y = a.y * bT.z;
 
-            
             result.c0.z = a.z * bT.x;
             result.c1.z = a.z * bT.y;
             result.c2.z = a.z * bT.z;
@@ -270,7 +269,7 @@ namespace Mathematics.Extensions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float csum(in float9 x) => x.r0 + x.r1 + x.r2 + x.r3 + x.r4 + x.r5 + x.r6 + x.r7 + x.r8;
 
-        public static void PlusEquals(ref float3x9 a, in float3x9 b)
+        public static void plusEquals(ref float3x9 a, in float3x9 b)
         {
             a.c0.x += b.c0.x;
             a.c1.x += b.c1.x;
@@ -303,7 +302,7 @@ namespace Mathematics.Extensions
             a.c8.z += b.c8.z;
 
         }
-        public static void PlusEquals(ref float3x3 a, in float3x3 b)
+        public static void plusEquals(ref float3x3 a, in float3x3 b)
         {
             a.c0.x += b.c0.x;
             a.c1.x += b.c1.x;

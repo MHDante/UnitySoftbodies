@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.SpatialTracking;
@@ -10,7 +9,7 @@ using InputDevice = UnityEngine.XR.InputDevice;
 public class Grabber : MonoBehaviour
 {
 
-    public HashSet<Rigidbody> collidedBodies = new HashSet<Rigidbody>();
+    public HashSet<Rigidbody> CollidedBodies = new HashSet<Rigidbody>();
     private List<FixedJoint> joints = new List<FixedJoint>();
 
     private InputDevice device;
@@ -31,18 +30,14 @@ public class Grabber : MonoBehaviour
             ? KeyCode.JoystickButton14
             : KeyCode.JoystickButton15;
 
-
-
         if (Input.GetKeyDown(butt))
         {
-
-            joints = collidedBodies.Select(b => b.gameObject.AddComponent<FixedJoint>()).ToList();
+            joints = CollidedBodies.Select(b => b.gameObject.AddComponent<FixedJoint>()).ToList();
             foreach (var fixedJoint in joints)
             {
                 fixedJoint.connectedBody = anchor;
             }
         }
-
 
         if (Input.GetKeyUp(butt))
         {
@@ -59,12 +54,12 @@ public class Grabber : MonoBehaviour
         if (other.rigidbody)
         {
             device.SendHapticImpulse(0, 0.5f);
-            collidedBodies.Add(other.rigidbody);
+            CollidedBodies.Add(other.rigidbody);
         }
     }
 
     private void OnCollisionExit(Collision other)
     {
-        collidedBodies.Remove(other.rigidbody);
+        CollidedBodies.Remove(other.rigidbody);
     }
 }

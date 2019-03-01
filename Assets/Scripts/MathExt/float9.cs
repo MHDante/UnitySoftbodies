@@ -1,4 +1,5 @@
-﻿// GENERATED CODE
+﻿// ReSharper disable InconsistentNaming - Using Unity math naming convention
+// GENERATED CODE
 using System;
 using System.Runtime.CompilerServices;
 using System.Diagnostics;
@@ -9,8 +10,8 @@ using Unity.Mathematics;
 namespace Mathematics.Extensions
 {
     [DebuggerTypeProxy(typeof(DebuggerProxy))]
-    [System.Serializable]
-    public struct float9 : System.IEquatable<float9>, IFormattable
+    [Serializable]
+    public struct float9 : IEquatable<float9>, IFormattable
     {
         public float r0;
         public float r1;
@@ -23,6 +24,7 @@ namespace Mathematics.Extensions
         public float r8;
 
         /// <summary>float9 zero value.</summary>
+        // ReSharper disable once UnassignedReadonlyField - Purposefully using zeroed out value.
         public static readonly float9 zero;
 
         /// <summary>Constructs a float9 vector from float values.</summary>
@@ -44,60 +46,60 @@ namespace Mathematics.Extensions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float9(float3 r0r1r2, float3 r3r4r5, float3 r6r7r8)
         {
-            this.r0 = r0r1r2.x;
-            this.r1 = r0r1r2.y;
-            this.r2 = r0r1r2.z;
-            this.r3 = r3r4r5.x;
-            this.r4 = r3r4r5.y;
-            this.r5 = r3r4r5.z;
-            this.r6 = r6r7r8.x;
-            this.r7 = r6r7r8.y;
-            this.r8 = r6r7r8.z;
+            r0 = r0r1r2.x;
+            r1 = r0r1r2.y;
+            r2 = r0r1r2.z;
+            r3 = r3r4r5.x;
+            r4 = r3r4r5.y;
+            r5 = r3r4r5.z;
+            r6 = r6r7r8.x;
+            r7 = r6r7r8.y;
+            r8 = r6r7r8.z;
         }
 
         /// <summary>Constructs a float9 vector from a float9 vector.</summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float9(float9 r0r1r2r3r4r5r6r7r8)
         {
-            this.r0 = r0r1r2r3r4r5r6r7r8.r0;
-            this.r1 = r0r1r2r3r4r5r6r7r8.r1;
-            this.r2 = r0r1r2r3r4r5r6r7r8.r2;
-            this.r3 = r0r1r2r3r4r5r6r7r8.r3;
-            this.r4 = r0r1r2r3r4r5r6r7r8.r4;
-            this.r5 = r0r1r2r3r4r5r6r7r8.r5;
-            this.r6 = r0r1r2r3r4r5r6r7r8.r6;
-            this.r7 = r0r1r2r3r4r5r6r7r8.r7;
-            this.r8 = r0r1r2r3r4r5r6r7r8.r8;
+            r0 = r0r1r2r3r4r5r6r7r8.r0;
+            r1 = r0r1r2r3r4r5r6r7r8.r1;
+            r2 = r0r1r2r3r4r5r6r7r8.r2;
+            r3 = r0r1r2r3r4r5r6r7r8.r3;
+            r4 = r0r1r2r3r4r5r6r7r8.r4;
+            r5 = r0r1r2r3r4r5r6r7r8.r5;
+            r6 = r0r1r2r3r4r5r6r7r8.r6;
+            r7 = r0r1r2r3r4r5r6r7r8.r7;
+            r8 = r0r1r2r3r4r5r6r7r8.r8;
         }
 
         /// <summary>Constructs a float9 vector from a single float value by assigning it to every component.</summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float9(float v)
         {
-            this.r0 = v;
-            this.r1 = v;
-            this.r2 = v;
-            this.r3 = v;
-            this.r4 = v;
-            this.r5 = v;
-            this.r6 = v;
-            this.r7 = v;
-            this.r8 = v;
+            r0 = v;
+            r1 = v;
+            r2 = v;
+            r3 = v;
+            r4 = v;
+            r5 = v;
+            r6 = v;
+            r7 = v;
+            r8 = v;
         }
 
         /// <summary>Constructs a float9 vector from a single bool value by converting it to float and assigning it to every component.</summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float9(bool v)
         {
-            this.r0 = v ? 1.0f : 0.0f;
-            this.r1 = v ? 1.0f : 0.0f;
-            this.r2 = v ? 1.0f : 0.0f;
-            this.r3 = v ? 1.0f : 0.0f;
-            this.r4 = v ? 1.0f : 0.0f;
-            this.r5 = v ? 1.0f : 0.0f;
-            this.r6 = v ? 1.0f : 0.0f;
-            this.r7 = v ? 1.0f : 0.0f;
-            this.r8 = v ? 1.0f : 0.0f;
+            r0 = v ? 1.0f : 0.0f;
+            r1 = v ? 1.0f : 0.0f;
+            r2 = v ? 1.0f : 0.0f;
+            r3 = v ? 1.0f : 0.0f;
+            r4 = v ? 1.0f : 0.0f;
+            r5 = v ? 1.0f : 0.0f;
+            r6 = v ? 1.0f : 0.0f;
+            r7 = v ? 1.0f : 0.0f;
+            r8 = v ? 1.0f : 0.0f;
         }
 
 
@@ -105,15 +107,15 @@ namespace Mathematics.Extensions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float9(int v)
         {
-            this.r0 = v;
-            this.r1 = v;
-            this.r2 = v;
-            this.r3 = v;
-            this.r4 = v;
-            this.r5 = v;
-            this.r6 = v;
-            this.r7 = v;
-            this.r8 = v;
+            r0 = v;
+            r1 = v;
+            r2 = v;
+            r3 = v;
+            r4 = v;
+            r5 = v;
+            r6 = v;
+            r7 = v;
+            r8 = v;
         }
 
 
@@ -121,29 +123,29 @@ namespace Mathematics.Extensions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float9(uint v)
         {
-            this.r0 = v;
-            this.r1 = v;
-            this.r2 = v;
-            this.r3 = v;
-            this.r4 = v;
-            this.r5 = v;
-            this.r6 = v;
-            this.r7 = v;
-            this.r8 = v;
+            r0 = v;
+            r1 = v;
+            r2 = v;
+            r3 = v;
+            r4 = v;
+            r5 = v;
+            r6 = v;
+            r7 = v;
+            r8 = v;
         }
         /// <summary>Constructs a float9 vector from a single half value by converting it to float and assigning it to every component.</summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float9(half v)
         {
-            this.r0 = v;
-            this.r1 = v;
-            this.r2 = v;
-            this.r3 = v;
-            this.r4 = v;
-            this.r5 = v;
-            this.r6 = v;
-            this.r7 = v;
-            this.r8 = v;
+            r0 = v;
+            r1 = v;
+            r2 = v;
+            r3 = v;
+            r4 = v;
+            r5 = v;
+            r6 = v;
+            r7 = v;
+            r8 = v;
         }
 
 
@@ -151,15 +153,15 @@ namespace Mathematics.Extensions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float9(double v)
         {
-            this.r0 = (float)v;
-            this.r1 = (float)v;
-            this.r2 = (float)v;
-            this.r3 = (float)v;
-            this.r4 = (float)v;
-            this.r5 = (float)v;
-            this.r6 = (float)v;
-            this.r7 = (float)v;
-            this.r8 = (float)v;
+            r0 = (float)v;
+            r1 = (float)v;
+            r2 = (float)v;
+            r3 = (float)v;
+            r4 = (float)v;
+            r5 = (float)v;
+            r6 = (float)v;
+            r7 = (float)v;
+            r8 = (float)v;
         }
 
 
@@ -269,17 +271,17 @@ namespace Mathematics.Extensions
         public static float9 operator +(float9 val) { return new float9(+val.r0, +val.r1, +val.r2, +val.r3, +val.r4, +val.r5, +val.r6, +val.r7, +val.r8); }
 
         /// <summary>Returns the float element at a specified index.</summary>
-        unsafe public ref float this[int index]
+        public unsafe ref float this[int index]
         {
             get
             {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
-                if ((uint) index >= 9)
-                    throw new System.ArgumentException("index must be between[0...8]");
+                if ((uint)index >= 9)
+                    throw new ArgumentException("index must be between[0...8]");
 #endif
                 fixed (float9* array = &this)
                 {
-                    return ref ((float*) array)[index];
+                    return ref ((float*)array)[index];
                 }
             }
         }
@@ -289,7 +291,7 @@ namespace Mathematics.Extensions
         public bool Equals(float9 rhs) { return r0 == rhs.r0 && r1 == rhs.r1 && r2 == rhs.r2 && r3 == rhs.r3 && r4 == rhs.r4 && r5 == rhs.r5 && r6 == rhs.r6 && r7 == rhs.r7 && r8 == rhs.r8; }
 
         /// <summary>Returns true if the float9 is equal to a given float9, false otherwise.</summary>
-        public override bool Equals(object o) { return Equals((float9)o); }
+        public override bool Equals(object o) { return o != null && Equals((float9)o); }
 
 
         /// <summary>Returns a hash code for the float9.</summary>

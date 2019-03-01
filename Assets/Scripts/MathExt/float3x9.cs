@@ -1,14 +1,16 @@
+// ReSharper disable InconsistentNaming - Using Unity math naming convention
 // GENERATED CODE
+
 using System;
 using System.Runtime.CompilerServices;
-using Mathematics.Extensions;
+using Unity.Mathematics;
 
 #pragma warning disable 0660, 0661
 
-namespace Unity.Mathematics
+namespace Mathematics.Extensions
 {
-    [System.Serializable]
-    public partial struct float3x9 : System.IEquatable<float3x9>, IFormattable
+    [Serializable]
+    public struct float3x9 : IEquatable<float3x9>, IFormattable
     {
         public float3 c0;
         public float3 c1;
@@ -21,6 +23,7 @@ namespace Unity.Mathematics
         public float3 c8;
 
         /// <summary>float3x9 zero value.</summary>
+        // ReSharper disable once UnassignedReadonlyField - Purposefully using zeroed out value.
         public static readonly float3x9 zero;
 
         /// <summary>Constructs a float3x9 matrix from float3 vectors.</summary>
@@ -44,59 +47,59 @@ namespace Unity.Mathematics
                         float m10, float m11, float m12, float m13, float m14, float m15, float m16, float m17, float m18,
                         float m20, float m21, float m22, float m23, float m24, float m25, float m26, float m27, float m28)
         { 
-            this.c0 = new float3(m00, m10, m20);
-            this.c1 = new float3(m01, m11, m21);
-            this.c2 = new float3(m02, m12, m22);
-            this.c3 = new float3(m03, m13, m23);
-            this.c4 = new float3(m04, m14, m24);
-            this.c5 = new float3(m05, m15, m25);
-            this.c6 = new float3(m06, m16, m26);
-            this.c7 = new float3(m07, m17, m27);
-            this.c8 = new float3(m08, m18, m28);
+            c0 = new float3(m00, m10, m20);
+            c1 = new float3(m01, m11, m21);
+            c2 = new float3(m02, m12, m22);
+            c3 = new float3(m03, m13, m23);
+            c4 = new float3(m04, m14, m24);
+            c5 = new float3(m05, m15, m25);
+            c6 = new float3(m06, m16, m26);
+            c7 = new float3(m07, m17, m27);
+            c8 = new float3(m08, m18, m28);
         }
 
         /// <summary>Constructs a float3x9 matrix from a single float value by assigning it to every component.</summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float3x9(float v)
         {
-            this.c0 = v;
-            this.c1 = v;
-            this.c2 = v;
-            this.c3 = v;
-            this.c4 = v;
-            this.c5 = v;
-            this.c6 = v;
-            this.c7 = v;
-            this.c8 = v;
+            c0 = v;
+            c1 = v;
+            c2 = v;
+            c3 = v;
+            c4 = v;
+            c5 = v;
+            c6 = v;
+            c7 = v;
+            c8 = v;
         }
         /// <summary>Constructs a float3x9 matrix from a single int value by converting it to float and assigning it to every component.</summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float3x9(int v)
         {
-            this.c0 = v;
-            this.c1 = v;
-            this.c2 = v;
-            this.c3 = v;
-            this.c4 = v;
-            this.c5 = v;
-            this.c6 = v;
-            this.c7 = v;
-            this.c8 = v;
+            c0 = v;
+            c1 = v;
+            c2 = v;
+            c3 = v;
+            c4 = v;
+            c5 = v;
+            c6 = v;
+            c7 = v;
+            c8 = v;
         }
         
         /// <summary>Constructs a float3x9 matrix from a single uint value by converting it to float and assigning it to every component.</summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float3x9(uint v)
         {
-            this.c0 = v;
-            this.c1 = v;
-            this.c2 = v;
-            this.c3 = v;
-            this.c4 = v;
-            this.c5 = v;
-            this.c6 = v;
-            this.c7 = v;
-            this.c8 = v;
+            c0 = v;
+            c1 = v;
+            c2 = v;
+            c3 = v;
+            c4 = v;
+            c5 = v;
+            c6 = v;
+            c7 = v;
+            c8 = v;
         }
         
 
@@ -104,15 +107,15 @@ namespace Unity.Mathematics
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float3x9(double v)
         {
-            this.c0 = (float3)v;
-            this.c1 = (float3)v;
-            this.c2 = (float3)v;
-            this.c3 = (float3)v;
-            this.c4 = (float3)v;
-            this.c5 = (float3)v;
-            this.c6 = (float3)v;
-            this.c7 = (float3)v;
-            this.c8 = (float3)v;
+            c0 = (float3)v;
+            c1 = (float3)v;
+            c2 = (float3)v;
+            c3 = (float3)v;
+            c4 = (float3)v;
+            c5 = (float3)v;
+            c6 = (float3)v;
+            c7 = (float3)v;
+            c8 = (float3)v;
         }
         
         
@@ -241,7 +244,7 @@ namespace Unity.Mathematics
             {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
                 if ((uint)index >= 9)
-                    throw new System.ArgumentException("index must be between[0...8]");
+                    throw new ArgumentException("index must be between[0...8]");
 #endif
                 fixed (float3x9* array = &this) { return ref ((float3*)array)[index]; }
             }
@@ -252,7 +255,9 @@ namespace Unity.Mathematics
         public bool Equals(float3x9 rhs) { return c0.Equals(rhs.c0) && c1.Equals(rhs.c1) && c2.Equals(rhs.c2) && c3.Equals(rhs.c3) && c4.Equals(rhs.c4) && c5.Equals(rhs.c5) && c6.Equals(rhs.c6) && c7.Equals(rhs.c7) && c8.Equals(rhs.c8); }
 
         /// <summary>Returns true if the float3x9 is equal to a given float3x9, false otherwise.</summary>
-        public override bool Equals(object o) { return Equals((float3x9)o); }
+        public override bool Equals(object o)
+        {
+            return o != null && Equals((float3x9)o); }
 
 
         /// <summary>Returns a string representation of the float3x9.</summary>
@@ -274,15 +279,15 @@ namespace Unity.Mathematics
         public float9 row(int i)
         {
             return new float9(
-                this.c0[i],
-                this.c1[i],
-                this.c2[i],
-                this.c3[i],
-                this.c4[i],
-                this.c5[i],
-                this.c6[i],
-                this.c7[i],
-                this.c8[i]
+                c0[i],
+                c1[i],
+                c2[i],
+                c3[i],
+                c4[i],
+                c5[i],
+                c6[i],
+                c7[i],
+                c8[i]
             );
         }
     }
