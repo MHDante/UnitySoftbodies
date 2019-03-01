@@ -124,11 +124,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: Monkeh
       objectReference: {fileID: 0}
-    - target: {fileID: 5493569238652429264, guid: 098e1d128ad99bb4a8997fa549113edb,
-        type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 5493569238652403696, guid: 098e1d128ad99bb4a8997fa549113edb,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -137,7 +132,7 @@ PrefabInstance:
     - target: {fileID: 5493569238652403696, guid: 098e1d128ad99bb4a8997fa549113edb,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 0.7
       objectReference: {fileID: 0}
     - target: {fileID: 5493569238652403696, guid: 098e1d128ad99bb4a8997fa549113edb,
         type: 3}
@@ -184,34 +179,32 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5493569238652403696, guid: 098e1d128ad99bb4a8997fa549113edb,
-        type: 3}
-      propertyPath: m_LocalScale.x
-      value: 0.2
+    - target: {fileID: 1210630962, guid: 098e1d128ad99bb4a8997fa549113edb, type: 3}
+      propertyPath: ParticleOptions.Shape
+      value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5493569238652403696, guid: 098e1d128ad99bb4a8997fa549113edb,
-        type: 3}
-      propertyPath: m_LocalScale.y
-      value: 0.2
+    - target: {fileID: 1210630962, guid: 098e1d128ad99bb4a8997fa549113edb, type: 3}
+      propertyPath: ParticleOptions.Distance
+      value: 0.1
       objectReference: {fileID: 0}
-    - target: {fileID: 5493569238652403696, guid: 098e1d128ad99bb4a8997fa549113edb,
-        type: 3}
-      propertyPath: m_LocalScale.z
-      value: 0.2
+    - target: {fileID: 1210630962, guid: 098e1d128ad99bb4a8997fa549113edb, type: 3}
+      propertyPath: ParticleOptions.Size
+      value: 0.1
       objectReference: {fileID: 0}
-    - target: {fileID: 5493569238650502416, guid: 098e1d128ad99bb4a8997fa549113edb,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
+    - target: {fileID: 1210630962, guid: 098e1d128ad99bb4a8997fa549113edb, type: 3}
+      propertyPath: ParticleOptions.PhysicsMaterial
       value: 
-      objectReference: {fileID: 2100000, guid: 78b502edc9d769947b3ffff3cb28b9b6, type: 2}
-    - target: {fileID: 5493569238650502416, guid: 098e1d128ad99bb4a8997fa549113edb,
-        type: 3}
-      propertyPath: m_Enabled
+      objectReference: {fileID: 13400000, guid: 52bbfac3684b0f24da664f65e99e91cd,
+        type: 2}
+    - target: {fileID: 1210630962, guid: 098e1d128ad99bb4a8997fa549113edb, type: 3}
+      propertyPath: Alpha
       value: 1
       objectReference: {fileID: 0}
-    m_RemovedComponents:
-    - {fileID: 5493569238652429270, guid: 098e1d128ad99bb4a8997fa549113edb, type: 3}
-    - {fileID: 5493569238652429271, guid: 098e1d128ad99bb4a8997fa549113edb, type: 3}
+    - target: {fileID: 1210630962, guid: 098e1d128ad99bb4a8997fa549113edb, type: 3}
+      propertyPath: Beta
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 098e1d128ad99bb4a8997fa549113edb, type: 3}
 --- !u!1 &142982447
 GameObject:
@@ -398,11 +391,242 @@ MonoBehaviour:
   Beta: 0.832
   Drag: 1
   MatchingMode: 2
-  ShouldUpdatePivot: 1
-  ParticleDistance: 0.2
-  ParticleSize: 0.2
-  ParticleMass: 0.2
-  ParticleOverlap: 1
+  ParticleOptions:
+    Distance: 0.1
+    Size: 0.2
+    Mass: 0.008
+    Shape: 0
+    PhysicsMaterial: {fileID: 0}
+    Mode: 0
+  meshFilter: {fileID: 0}
+  q: []
+  q_tilde: []
+  x: []
+  m: []
+  xcm:
+    x: 0
+    y: 0
+    z: 0
+  Aqq:
+    c0:
+      x: 0
+      y: 0
+      z: 0
+    c1:
+      x: 0
+      y: 0
+      z: 0
+    c2:
+      x: 0
+      y: 0
+      z: 0
+  Aqq_tilde:
+    c0:
+      r0: 0
+      r1: 0
+      r2: 0
+      r3: 0
+      r4: 0
+      r5: 0
+      r6: 0
+      r7: 0
+      r8: 0
+    c1:
+      r0: 0
+      r1: 0
+      r2: 0
+      r3: 0
+      r4: 0
+      r5: 0
+      r6: 0
+      r7: 0
+      r8: 0
+    c2:
+      r0: 0
+      r1: 0
+      r2: 0
+      r3: 0
+      r4: 0
+      r5: 0
+      r6: 0
+      r7: 0
+      r8: 0
+    c3:
+      r0: 0
+      r1: 0
+      r2: 0
+      r3: 0
+      r4: 0
+      r5: 0
+      r6: 0
+      r7: 0
+      r8: 0
+    c4:
+      r0: 0
+      r1: 0
+      r2: 0
+      r3: 0
+      r4: 0
+      r5: 0
+      r6: 0
+      r7: 0
+      r8: 0
+    c5:
+      r0: 0
+      r1: 0
+      r2: 0
+      r3: 0
+      r4: 0
+      r5: 0
+      r6: 0
+      r7: 0
+      r8: 0
+    c6:
+      r0: 0
+      r1: 0
+      r2: 0
+      r3: 0
+      r4: 0
+      r5: 0
+      r6: 0
+      r7: 0
+      r8: 0
+    c7:
+      r0: 0
+      r1: 0
+      r2: 0
+      r3: 0
+      r4: 0
+      r5: 0
+      r6: 0
+      r7: 0
+      r8: 0
+    c8:
+      r0: 0
+      r1: 0
+      r2: 0
+      r3: 0
+      r4: 0
+      r5: 0
+      r6: 0
+      r7: 0
+      r8: 0
+  R:
+    c0:
+      x: 0
+      y: 0
+      z: 0
+    c1:
+      x: 0
+      y: 0
+      z: 0
+    c2:
+      x: 0
+      y: 0
+      z: 0
+  Rq:
+    value:
+      x: 0
+      y: 0
+      z: 0
+      w: 1
+  R_tilde:
+    c0:
+      x: 0
+      y: 0
+      z: 0
+    c1:
+      x: 0
+      y: 0
+      z: 0
+    c2:
+      x: 0
+      y: 0
+      z: 0
+    c3:
+      x: 0
+      y: 0
+      z: 0
+    c4:
+      x: 0
+      y: 0
+      z: 0
+    c5:
+      x: 0
+      y: 0
+      z: 0
+    c6:
+      x: 0
+      y: 0
+      z: 0
+    c7:
+      x: 0
+      y: 0
+      z: 0
+    c8:
+      x: 0
+      y: 0
+      z: 0
+  T:
+    c0:
+      x: 0
+      y: 0
+      z: 0
+    c1:
+      x: 0
+      y: 0
+      z: 0
+    c2:
+      x: 0
+      y: 0
+      z: 0
+  T_tilde:
+    c0:
+      x: 0
+      y: 0
+      z: 0
+    c1:
+      x: 0
+      y: 0
+      z: 0
+    c2:
+      x: 0
+      y: 0
+      z: 0
+    c3:
+      x: 0
+      y: 0
+      z: 0
+    c4:
+      x: 0
+      y: 0
+      z: 0
+    c5:
+      x: 0
+      y: 0
+      z: 0
+    c6:
+      x: 0
+      y: 0
+      z: 0
+    c7:
+      x: 0
+      y: 0
+      z: 0
+    c8:
+      x: 0
+      y: 0
+      z: 0
+  particles: []
+  particleParent: {fileID: 0}
+  origVertices: []
+  origVertices_tilde: []
+  vertices: []
+  normals: []
+  tangents: []
+  initialRotation: {x: 0, y: 0, z: 0, w: 0}
+  prevRot: {x: 0, y: 0, z: 0, w: 0}
+  prevPos: {x: 0, y: 0, z: 0}
 --- !u!1 &467472422
 GameObject:
   m_ObjectHideFlags: 0
@@ -439,11 +663,242 @@ MonoBehaviour:
   Beta: 0.445
   Drag: 0
   MatchingMode: 2
-  ShouldUpdatePivot: 1
-  ParticleDistance: 0.2
-  ParticleSize: 0.2
-  ParticleMass: 0.008
-  ParticleOverlap: 0
+  ParticleOptions:
+    Distance: 0.1
+    Size: 0.2
+    Mass: 0.008
+    Shape: 0
+    PhysicsMaterial: {fileID: 0}
+    Mode: 0
+  meshFilter: {fileID: 0}
+  q: []
+  q_tilde: []
+  x: []
+  m: []
+  xcm:
+    x: 0
+    y: 0
+    z: 0
+  Aqq:
+    c0:
+      x: 0
+      y: 0
+      z: 0
+    c1:
+      x: 0
+      y: 0
+      z: 0
+    c2:
+      x: 0
+      y: 0
+      z: 0
+  Aqq_tilde:
+    c0:
+      r0: 0
+      r1: 0
+      r2: 0
+      r3: 0
+      r4: 0
+      r5: 0
+      r6: 0
+      r7: 0
+      r8: 0
+    c1:
+      r0: 0
+      r1: 0
+      r2: 0
+      r3: 0
+      r4: 0
+      r5: 0
+      r6: 0
+      r7: 0
+      r8: 0
+    c2:
+      r0: 0
+      r1: 0
+      r2: 0
+      r3: 0
+      r4: 0
+      r5: 0
+      r6: 0
+      r7: 0
+      r8: 0
+    c3:
+      r0: 0
+      r1: 0
+      r2: 0
+      r3: 0
+      r4: 0
+      r5: 0
+      r6: 0
+      r7: 0
+      r8: 0
+    c4:
+      r0: 0
+      r1: 0
+      r2: 0
+      r3: 0
+      r4: 0
+      r5: 0
+      r6: 0
+      r7: 0
+      r8: 0
+    c5:
+      r0: 0
+      r1: 0
+      r2: 0
+      r3: 0
+      r4: 0
+      r5: 0
+      r6: 0
+      r7: 0
+      r8: 0
+    c6:
+      r0: 0
+      r1: 0
+      r2: 0
+      r3: 0
+      r4: 0
+      r5: 0
+      r6: 0
+      r7: 0
+      r8: 0
+    c7:
+      r0: 0
+      r1: 0
+      r2: 0
+      r3: 0
+      r4: 0
+      r5: 0
+      r6: 0
+      r7: 0
+      r8: 0
+    c8:
+      r0: 0
+      r1: 0
+      r2: 0
+      r3: 0
+      r4: 0
+      r5: 0
+      r6: 0
+      r7: 0
+      r8: 0
+  R:
+    c0:
+      x: 0
+      y: 0
+      z: 0
+    c1:
+      x: 0
+      y: 0
+      z: 0
+    c2:
+      x: 0
+      y: 0
+      z: 0
+  Rq:
+    value:
+      x: 0
+      y: 0
+      z: 0
+      w: 1
+  R_tilde:
+    c0:
+      x: 0
+      y: 0
+      z: 0
+    c1:
+      x: 0
+      y: 0
+      z: 0
+    c2:
+      x: 0
+      y: 0
+      z: 0
+    c3:
+      x: 0
+      y: 0
+      z: 0
+    c4:
+      x: 0
+      y: 0
+      z: 0
+    c5:
+      x: 0
+      y: 0
+      z: 0
+    c6:
+      x: 0
+      y: 0
+      z: 0
+    c7:
+      x: 0
+      y: 0
+      z: 0
+    c8:
+      x: 0
+      y: 0
+      z: 0
+  T:
+    c0:
+      x: 0
+      y: 0
+      z: 0
+    c1:
+      x: 0
+      y: 0
+      z: 0
+    c2:
+      x: 0
+      y: 0
+      z: 0
+  T_tilde:
+    c0:
+      x: 0
+      y: 0
+      z: 0
+    c1:
+      x: 0
+      y: 0
+      z: 0
+    c2:
+      x: 0
+      y: 0
+      z: 0
+    c3:
+      x: 0
+      y: 0
+      z: 0
+    c4:
+      x: 0
+      y: 0
+      z: 0
+    c5:
+      x: 0
+      y: 0
+      z: 0
+    c6:
+      x: 0
+      y: 0
+      z: 0
+    c7:
+      x: 0
+      y: 0
+      z: 0
+    c8:
+      x: 0
+      y: 0
+      z: 0
+  particles: []
+  particleParent: {fileID: 0}
+  origVertices: []
+  origVertices_tilde: []
+  vertices: []
+  normals: []
+  tangents: []
+  initialRotation: {x: 0, y: 0, z: 0, w: 0}
+  prevRot: {x: 0, y: 0, z: 0, w: 0}
+  prevPos: {x: 0, y: 0, z: 0}
 --- !u!135 &467472424
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -651,33 +1106,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1210630961 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 5493569238652429264, guid: 098e1d128ad99bb4a8997fa549113edb,
-    type: 3}
-  m_PrefabInstance: {fileID: 49895937}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &1210630962
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1210630961}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 569973ef3add45744a22e7927818ece9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Alpha: 0.373
-  Beta: 0.627
-  Drag: 0
-  MatchingMode: 2
-  ShouldUpdatePivot: 1
-  ParticleDistance: 0.1
-  ParticleSize: 0.1
-  ParticleMass: 0.1
-  ParticleOverlap: 0
 --- !u!1 &1264068237
 GameObject:
   m_ObjectHideFlags: 0

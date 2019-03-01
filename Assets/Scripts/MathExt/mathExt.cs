@@ -139,25 +139,40 @@ namespace Mathematics.Extensions
             return result;
         }
 
-        public static void ToOldMatrix(this in float3x3 mIn, ref Matrix4x4 mOut, float last = 0)
+        public static void ToOldMatrix(this in float3x3 mIn, ref Matrix4x4 mOut)
         {
-            mOut[0, 0] = mIn[0][0];
-            mOut[0, 1] = mIn[1][0];
-            mOut[0, 2] = mIn[2][0];
-            mOut[0, 3] = 0;
-            mOut[1, 0] = mIn[0][1];
-            mOut[1, 1] = mIn[1][1];
-            mOut[1, 2] = mIn[2][1];
-            mOut[1, 3] = 0;
-            mOut[2, 0] = mIn[0][2];
-            mOut[2, 1] = mIn[1][2];
-            mOut[2, 2] = mIn[2][2];
-            mOut[2, 3] = 0;
-            mOut[3, 0] = 0;
-            mOut[3, 1] = 0;
-            mOut[3, 2] = 0;
-            mOut[3, 3] = last;
+            mOut.m00 = mIn.c0.x ;
+            mOut.m01 = mIn.c0.y ;
+            mOut.m02 = mIn.c0.z ;
+            mOut.m03 = 0        ;
+            mOut.m10 = mIn.c1.x ;
+            mOut.m11 = mIn.c1.y ;
+            mOut.m12 = mIn.c1.z ;
+            mOut.m13 = 0        ;
+            mOut.m20 = mIn.c2.x ;
+            mOut.m21 = mIn.c2.y ;
+            mOut.m22 = mIn.c2.z ;
+            mOut.m23 = 0        ;
+            mOut.m30 = 0        ;
+            mOut.m31 = 0        ;
+            mOut.m32 = 0        ;
+            mOut.m33 = 1     ;
         }
+
+        
+        public static void ToNewRotationMatrix(this in Matrix4x4 mIn, ref float3x3 mOut)
+        {
+            mOut.c0.x = mIn.m00 ;
+            mOut.c0.y = mIn.m01 ;
+            mOut.c0.z = mIn.m02 ;
+            mOut.c1.x = mIn.m10 ;
+            mOut.c1.y = mIn.m11 ;
+            mOut.c1.z = mIn.m12 ;
+            mOut.c2.x = mIn.m20 ;
+            mOut.c2.y = mIn.m21 ;
+            mOut.c2.z = mIn.m22 ;
+        }
+        
 
 
         public static void ToOldMatrix(this in float3x9 mIn, Matrix4x4[] mOut)

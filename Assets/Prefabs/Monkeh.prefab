@@ -11,8 +11,7 @@ GameObject:
   - component: {fileID: 5493569238652403696}
   - component: {fileID: 5493569238651633616}
   - component: {fileID: 5493569238650502416}
-  - component: {fileID: 5493569238652429270}
-  - component: {fileID: 5493569238652429271}
+  - component: {fileID: 1210630962}
   m_Layer: 0
   m_Name: Monkeh
   m_TagString: Untagged
@@ -27,9 +26,9 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5493569238652429264}
-  m_LocalRotation: {x: -0, y: -0.9900413, z: -0, w: -0.14077698}
+  m_LocalRotation: {x: -0, y: -0.9900409, z: 0, w: -0.14078005}
   m_LocalPosition: {x: -2.221967, y: 2.13, z: -0.057256542}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.2, y: 0.2, z: 0.2}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -59,7 +58,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 3b9f78d9681376449a05289a510801ea, type: 2}
+  - {fileID: 10302, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -79,33 +78,24 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
---- !u!54 &5493569238652429270
-Rigidbody:
+--- !u!114 &1210630962
+MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5493569238652429264}
-  serializedVersion: 2
-  m_Mass: 1
-  m_Drag: 0
-  m_AngularDrag: 0.05
-  m_UseGravity: 1
-  m_IsKinematic: 1
-  m_Interpolate: 0
-  m_Constraints: 0
-  m_CollisionDetection: 0
---- !u!64 &5493569238652429271
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5493569238652429264}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Convex: 0
-  m_CookingOptions: 14
-  m_Mesh: {fileID: 4300000, guid: 439cdcb54fcc2134d9dfa935d72ab958, type: 3}
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 569973ef3add45744a22e7927818ece9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Alpha: 0.373
+  Beta: 0.627
+  Drag: 0
+  MatchingMode: 2
+  ParticleOptions:
+    ParticleDistance: 0.1
+    ParticleSize: 0.2
+    ParticleMass: 0.008
+    ParticleOverlap: 0
