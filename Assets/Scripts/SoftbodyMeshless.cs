@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using Mathematics.Extensions;
 using Unity.Burst;
@@ -25,7 +24,7 @@ using UnityEngine;
 ///  
 /// </summary>
 [RequireComponent(typeof(MeshFilter))]
-public class MsdEcs : MonoBehaviour
+public class SoftbodyMeshless : MonoBehaviour
 {
     private static int counter;
 
@@ -37,7 +36,6 @@ public class MsdEcs : MonoBehaviour
     [Range(0, 1), Tooltip(
          "Interpolation between 0: rotation only or 1: shearing/bending. Works only on Linear and Quadratic Modes.")]
     public float Beta = 0;
-
 
     [Tooltip("The matching mode determines how the shape can deform. All modes allow small deformations, but this controls changes in the " +
              "overall frame of the shape. Rigid allows only rotations. Linear allows only shears and stretches. Quadratic allows bending. ")]
@@ -52,72 +50,108 @@ public class MsdEcs : MonoBehaviour
         Mode = ParticleModes.SpaceFillingLattice
     };
 
-    // Object properties
-    [SerializeField, HideInInspector] private MeshFilter meshFilter;
-
-    // collections and variables are kept as fields to avoid re-allocating.
-    // Variables are named according to their name in [Muller05]'s paper
-
-    [SerializeField, HideInInspector] private float3[] q;           // Initial relative (from center of mass) locations of particles
-    [SerializeField, HideInInspector] private float9[] q_tilde;     // Quadratic q
-    [SerializeField, HideInInspector] private float3[] x;           // Current world position of particles
-    [SerializeField, HideInInspector] private float[] m;            // Current Masses of particles
-    [SerializeField, HideInInspector] private float3 xcm;           // Current Center of Mass
-    [SerializeField, HideInInspector] private float3x3 Aqq;         // Scaling part of A. Can be precomputed
-    [SerializeField, HideInInspector] private float9x9 Aqq_tilde;   // Quadratic Aqq
-    [SerializeField, HideInInspector] private float3x3 R;           // The rotation part of Apq
-    [SerializeField, HideInInspector] private quaternion Rq;        // Rq stands for "R quaternion". See [Muller16]
-    [SerializeField, HideInInspector] private float3x9 R_tilde;     // Quadratic R
-    [SerializeField, HideInInspector] private float3x3 T;           // Interpolation between R and A. See [Muller05] Section 4.2
-    [SerializeField, HideInInspector] private float3x9 T_tilde;     // Quadratic T
 
     // Particles are represented by tiny rigidbodies in the physics system.
     [SerializeField, HideInInspector] private Rigidbody[] particles;
-    [SerializeField, HideInInspector] private Transform particleParent;
+    private Mesh mesh;
 
-    // This is ultimately the data that we wish to modify.
-    [SerializeField, HideInInspector] private float3[] origVertices; // The positions of the mesh vertices relative to the center of mass.      
-    [SerializeField, HideInInspector] private float9[] origVertices_tilde;
-    [SerializeField, HideInInspector] private float3[] origNormals;
-    [SerializeField, HideInInspector] private float9[] origNormals_tilde;
-    [SerializeField, HideInInspector] private float3[] origTangents;
-    [SerializeField, HideInInspector] private float9[] origTangents_tilde;
+    // collections and variables are kept as fields to avoid re-allocating.
+    // Variables are named according to their name in [Muller05]'s paper
+    // Initial relative (from center of mass) locations of particles
+    [SerializeField, HideInInspector] private float3[] q;
+    [SerializeField, HideInInspector] private float3 x0cm;
+
+    private float9[] q_tilde;     // Quadratic q
+    private float3x3 Aqq;         // Scaling part of A. Can be precomputed
+    private float9x9 Aqq_tilde;   // Quadratic Aqq
+
+    private float3[] x;           // Current world position of particles
+    private float[] m;            // Current Masses of particles
+    private float3 xcm;           // Current Center of Mass
+    private float3x3 R;           // The rotation part of Apq
+    private quaternion Rq;        // Rq stands for "R quaternion". See [Muller16]
+    private float3x9 R_tilde;     // Quadratic R
+    private float3x3 T;           // Interpolation between R and A. See [Muller05] Section 4.2
+    private float3x9 T_tilde;     // Quadratic T
 
     // We populate these arrays with transformed data and send it back to the mesh filter
-    [SerializeField, HideInInspector] private Vector3[] vertices;
-    [SerializeField, HideInInspector] private Vector3[] normals;
-    [SerializeField, HideInInspector] private Vector4[] tangents;
+    private Vector3[] vertices;
+    private Vector3[] normals;
+    private Vector4[] tangents;
+
+    // This is ultimately the data that we wish to modify.
+    private float3[] origVertices; // The positions of the mesh vertices relative to the center of mass.      
+    private float9[] origVertices_tilde;
+    private float3[] origNormals;
+    private float9[] origNormals_tilde;
+    private float3[] origTangents;
+    private float9[] origTangents_tilde;
+
+    private static Collider[] overlapCache = new Collider[5];
 
     // These variables are used to match the pivot of this object to the particle's motion.
-    [SerializeField, HideInInspector] private Quaternion initialRotation;
-    [SerializeField, HideInInspector] private Quaternion prevRot;
-    [SerializeField, HideInInspector] private Vector3 prevPos;
+    private Quaternion initialRotation;
+    private Quaternion prevRot;
+    private Vector3 prevPos;
 
-    public void Awake()
+    private bool Initialized = false;
+    [SerializeField, HideInInspector] private bool HotReloading = false;
+
+    public void OnEnable()
     {
-        initialRotation = transform.rotation;
-        prevPos = transform.position;
-        prevRot = transform.rotation;
-        meshFilter = GetComponent<MeshFilter>();
-        var mesh = meshFilter.mesh;
+        if (Initialized) return;
+
+        var t = transform;
+        prevPos = t.position;
+        prevRot = initialRotation = t.rotation;
+
+        var meshFilter = GetComponent<MeshFilter>();
+        mesh = meshFilter.mesh;
         mesh.MarkDynamic();
+
+        if (particles == null || particles.Length == 0) particles = CreateParticles(mesh);
+
+        // Initial allocations
+
+        //Seed for ExtractRotation. We start with the identity quaternion because the particles' original position (q) is calculated using
+        // world-aligned axes. See [Muller2016]. 
+        Rq = quaternion.identity;
+
+        x = new float3[particles.Length];
+        m = new float[particles.Length];
+        q = new float3[particles.Length];
+        q_tilde = new float9[particles.Length];
+
+        GetPositionsAndMasses(particles, x, m, out x0cm);
+
+        InitializeMeshData(x0cm);
+
+        float3x3 temp = float3x3.zero;
+
+
+        for (int i = 0; i < x.Length; i++)
+        {
+            q[i] = x[i] - x0cm;
+        }
+
+        // We calculate the quadratic terms and Aqq matrices regardless of the mode in case it gets switched at runtime.
+        for (int i = 0; i < x.Length; i++)
+        {
+            q_tilde[i] = GetQuadratic(q[i]);
+            mathExt.mulT(m[i] * q[i], q[i], ref temp);
+            Aqq += temp;
+            Aqq_tilde += mathExt.mulT(m[i] * q_tilde[i], q_tilde[i]);
+        }
+
+        Aqq = math.inverse(Aqq);
+        Aqq_tilde = mathExt.inverse(Aqq_tilde);
+    }
+
+    private void InitializeMeshData(float3 x0cm)
+    {
         vertices = mesh.vertices;
         normals = mesh.normals;
         tangents = mesh.tangents;
-
-        switch (ParticleOptions.Mode)
-        {
-            case ParticleModes.SpaceFillingLattice:
-                particles = CreateParticleLattice();
-                break;
-            case ParticleModes.ParticlesAtVertices:
-                particles = CreateParticlesAtVertices();
-                break;
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
-
-        // Initial allocations
 
         origVertices = new float3[vertices.Length];
         origVertices_tilde = new float9[vertices.Length];
@@ -126,16 +160,6 @@ public class MsdEcs : MonoBehaviour
         origTangents = new float3[vertices.Length];
         origTangents_tilde = new float9[vertices.Length];
 
-        x = new float3[particles.Length];
-        m = new float[particles.Length];
-        q = new float3[particles.Length];
-        q_tilde = new float9[particles.Length];
-
-        //Seed for ExtractRotation. We start with the identity quaternion because the particles' original position (q) is calculated using
-        // world-aligned axes. See [Muller2016]. 
-        Rq = quaternion.identity;
-
-        GetPositionsAndMasses(particles, x, m, out var x0cm);
 
         for (int i = 0; i < vertices.Length; i++)
         {
@@ -148,20 +172,25 @@ public class MsdEcs : MonoBehaviour
             origTangents[i] = transform.TransformDirection(tangents[i]);
             origTangents_tilde[i] = GetQuadratic(origTangents[i]);
         }
+    }
 
-        float3x3 temp = float3x3.zero;
-        // We calculate the quadratic terms and Aqq matrices regardless of the mode in case it gets switched at runtime.
-        for (int i = 0; i < x.Length; i++)
+    private Rigidbody[] CreateParticles(Mesh mesh1)
+    {
+
+        var particleParent = new GameObject($"{name} Particles").transform;
+        particleParent.localScale = transform.lossyScale;
+        particleParent.position = transform.position;
+        particleParent.rotation = transform.rotation;
+
+        switch (ParticleOptions.Mode)
         {
-            q[i] = x[i] - x0cm;
-            q_tilde[i] = GetQuadratic(q[i]);
-            mathExt.mulT(m[i] * q[i], q[i], ref temp);
-            Aqq += temp;
-            Aqq_tilde += mathExt.mulT(m[i] * q_tilde[i], q_tilde[i]);
+            case ParticleModes.SpaceFillingLattice:
+                return CreateParticleLattice(particleParent, mesh1);
+            case ParticleModes.ParticlesAtVertices:
+                return CreateParticlesAtVertices(particleParent, mesh1);
+            default:
+                throw new ArgumentOutOfRangeException();
         }
-
-        Aqq = math.inverse(Aqq);
-        Aqq_tilde = mathExt.inverse(Aqq_tilde);
     }
 
     // The contents of this method are outlined in [Muller05]
@@ -227,9 +256,9 @@ public class MsdEcs : MonoBehaviour
             tangents[i].z = tan.z;
         }
 
-        meshFilter.mesh.vertices = vertices;
-        meshFilter.mesh.normals = normals;
-        meshFilter.mesh.tangents = tangents;
+        mesh.vertices = vertices;
+        mesh.normals = normals;
+        mesh.tangents = tangents;
     }
 
 
@@ -393,116 +422,111 @@ public class MsdEcs : MonoBehaviour
         centerOfMass = weightedSum / totalMass;
     }
 
-
-    private Rigidbody[] CreateParticleLattice()
+    private void ForEachGridPoint(Bounds bounds, Action<float3> action)
     {
-        var oldCollider = GetComponent<Collider>();
-        if (oldCollider == null)
-        {
-            var meshCollider = gameObject.AddComponent<MeshCollider>();
-            meshCollider.sharedMesh = meshFilter.sharedMesh;
-            oldCollider = meshCollider;
-        }
-        var result = new List<Rigidbody>(100);
-        var colliders = new List<Collider>(100);
-
-        particleParent = new GameObject($"{name} Particles").transform;
-        particleParent.localScale = transform.lossyScale;
-        particleParent.position = transform.position;
-        particleParent.rotation = transform.rotation;
-
-        var t = transform;
         var dist = ParticleOptions.Distance;
-        var halfC = dist / 2;
-        var bounds = meshFilter.mesh.bounds;
-        var min = bounds.min;
-        var max = bounds.max + Vector3.one * halfC;
-        var cells = new int3(math.ceil((max - min) / dist));
-        var zero = t.TransformPoint(Vector3.zero);
-        var right = t.TransformPoint(Vector3.right);
-        var up = t.TransformPoint(Vector3.up);
-        var forward = t.TransformPoint(Vector3.forward);
+        float3 step = transform.lossyScale * dist;
 
-        var worldExtents = new Vector3(
-            Vector3.Distance(zero, right),
-            Vector3.Distance(zero, up),
-            Vector3.Distance(zero, forward)
-        );
+        var floatCells = ((float3)bounds.size - new float3(ParticleOptions.Size)) / step;
+        var cells = new int3(floatCells);
+        var range = cells * step;
+        var min = (float3)bounds.center - range / 2;
 
-        Collider[] results = new Collider[5];
-
-        var halfextents = worldExtents * halfC;
-
-        for (int i = 0; i < cells.x; i++)
+        for (var i = 0; i <= cells.x; i++)
         {
-            for (int j = 0; j < cells.y; j++)
+            for (var j = 0; j <= cells.y; j++)
             {
-                for (int k = 0; k < cells.z; k++)
+                for (var k = 0; k <= cells.z; k++)
                 {
-                    var center = new Vector3(i * dist, j * dist, k * dist);
+
+                    var center = new float3(i, j, k) * step;
                     center += min;
-                    Array.Clear(results, 0, results.Length);
-
-                    var size = Physics.OverlapBoxNonAlloc(transform.TransformPoint(center), halfextents, results, t.rotation);
-                    if (size >= results.Length)
-                    {
-                        results = new Collider[size];
-                        Physics.OverlapBoxNonAlloc(transform.TransformPoint(center), halfextents, results, t.rotation);
-                    }
-                    if (!results.Contains(oldCollider)) continue;
-
-                    result.Add(MakeParticle(center, colliders));
+                    action(center);
                 }
             }
         }
+    }
 
-        Destroy(oldCollider);
-        Destroy(GetComponent<Rigidbody>());
+    private Rigidbody[] CreateParticleLattice(Transform particleParent, Mesh mesh1)
+    {
+        var meshCollider = gameObject.AddComponent<MeshCollider>();
+        meshCollider.sharedMesh = mesh1;
+        var size = ParticleOptions.Size;
+        var result = new List<Rigidbody>(100);
+        var colliders = new List<Collider>(100);
+
+        ForEachGridPoint(mesh1.bounds, center =>
+        {
+            if (CheckOverlap(transform.TransformPoint(center), size / 2, meshCollider))
+                result.Add(MakeParticle(particleParent, center, colliders, ParticleOptions, gameObject.layer));
+        });
+
+        Destroy(meshCollider);
         return result.ToArray();
     }
 
-    private Rigidbody[] CreateParticlesAtVertices()
+    private static bool CheckOverlap(Vector3 worldPoint, float radius, Collider search)
     {
-        var result = new Rigidbody[vertices.Length];
-        var colliders = new List<Collider>();
+        var length = Physics.OverlapSphereNonAlloc(worldPoint, radius, overlapCache);
+        if (length >= overlapCache.Length)
+        {
+            overlapCache = new Collider[length];
+            length = Physics.OverlapSphereNonAlloc(worldPoint, radius, overlapCache);
+        }
 
-        particleParent = new GameObject($"{name} Particles").transform;
-        particleParent.localScale = transform.lossyScale;
-        particleParent.position = transform.position;
-        particleParent.rotation = transform.rotation;
+        for (var i = 0; i < length; i++)
+        {
+            if (overlapCache[i] == search) return true;
+        }
+
+        return false;
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        var origMesh = GetComponent<MeshFilter>().mesh;
+        ForEachGridPoint(origMesh.bounds, pt => DrawPt(transform.TransformPoint(pt)));
+    }
+
+    private Rigidbody[] CreateParticlesAtVertices(Transform particleParent, Mesh mesh1)
+    {
+        var verts = mesh1.vertices;
+        var result = new Rigidbody[verts.Length];
+        var colliders = new List<Collider>();
 
         for (var i = 0; i < result.Length; i++)
         {
-            var rb = MakeParticle(vertices[i], colliders);
+            var rb = MakeParticle(particleParent, verts[i], colliders, ParticleOptions, gameObject.layer, name);
             result[i] = rb;
         }
 
         return result;
     }
 
-    private Rigidbody MakeParticle(Vector3 localPosition, List<Collider> colliders)
+    private static Rigidbody MakeParticle(Transform particleParent, Vector3 localPosition,
+        List<Collider> IgnoreColliders, ParticleOptions particleOptions, int layer, String name = "Softbody")
     {
-        var o = GameObject.CreatePrimitive(ParticleOptions.Shape);
-        o.GetComponent<MeshRenderer>().enabled = false;
+        var o = GameObject.CreatePrimitive(particleOptions.Shape);
         o.name = $"{name} Particle {counter++}";
-        o.transform.SetParent(particleParent, false);
-        o.transform.localPosition = localPosition;
-        var c = o.GetComponent<Collider>();
-        foreach (var cc in colliders)
-        {
-            Physics.IgnoreCollision(c, cc, true);
-        }
+        o.layer = layer;
+        o.GetComponent<MeshRenderer>().enabled = false;
 
-        colliders.Add(c);
-        o.transform.localScale = Vector3.one * ParticleOptions.Size;
+        var t = o.transform;
+        t.SetParent(particleParent, false);
+        t.localPosition = localPosition;
+        t.localScale = Vector3.one * particleOptions.Size;
+
+        var c = o.GetComponent<Collider>();
+        c.sharedMaterial = particleOptions.PhysicsMaterial;
+        foreach (var cc in IgnoreColliders) Physics.IgnoreCollision(c, cc, true);
+        IgnoreColliders.Add(c);
 
         var rb = o.AddComponent<Rigidbody>();
         rb.freezeRotation = true;
-        rb.drag = ParticleOptions.Drag;
+        rb.drag = particleOptions.Drag;
         rb.useGravity = true;
-        rb.mass = ParticleOptions.Mass;
-        c.sharedMaterial = ParticleOptions.PhysicsMaterial;
-        o.layer = gameObject.layer;
+        rb.mass = particleOptions.Mass;
+
         return rb;
     }
 
@@ -538,6 +562,8 @@ public struct ParticleOptions
 
     [Min(0f), Tooltip("Dampening of velocity. This is applied to all particle rigidbodies")]
     public float Drag;
+    [Range(0.01f, 1)]
+    public float ParticleTolerance;
 }
 
 public enum ParticleModes

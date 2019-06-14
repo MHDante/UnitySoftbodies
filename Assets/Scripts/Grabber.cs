@@ -23,9 +23,26 @@ public class Grabber : MonoBehaviour
         device = InputDevices.GetDeviceAtXRNode(XRNode.RightHand);
     }
 
+    
+    // ReSharper disable once UnusedMember.Local - Useful for debugging.
+    void DrawPt(Vector3 gi, Color? color = null)
+    {
+        var c = color ?? Color.white;
+        Debug.DrawLine(gi, gi + new Vector3(0, 0, .1f), c);
+        Debug.DrawLine(gi, gi + new Vector3(0, .1f, 0), c);
+        Debug.DrawLine(gi, gi + new Vector3(.1f, 0, 0), c);
+
+    }
+
     // Update is called once per frame
     void Update()
     {
+        
+        var bounds = GetComponent<Collider>().bounds;
+
+        DrawPt(bounds.min,Color.green);
+        DrawPt(bounds.max,Color.red);
+
         var butt = tpd.poseSource == TrackedPoseDriver.TrackedPose.LeftPose
             ? KeyCode.JoystickButton14
             : KeyCode.JoystickButton15;
